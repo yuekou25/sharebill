@@ -36,6 +36,10 @@
         .stats-box { background: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 10px; margin-top: 20px; display: none; }
         .stat-bar-container { width: 100%; background: #e2e8f0; border-radius: 6px; height: 10px; margin-top: 5px; overflow: hidden; }
         .stat-bar { height: 100%; border-radius: 6px; transition: width 0.5s ease-in-out; }
+        
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;}
+        .badge-exact { background-color: #e8f4f8; color: #2980b9; border: 1px solid #bce8f1;}
+        .badge-mixed { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba;}
     </style>
 </head>
 <body>
@@ -47,9 +51,9 @@
         <h2>👥 Thành viên</h2>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <input type="text" id="personName" placeholder="Tên (Bắt buộc)">
-            <input type="text" id="personBank" placeholder="Tên Ngân hàng (VD: VCB, MB...)">
+            <input type="text" id="personBank" placeholder="Ngân hàng (VD: VCB)">
         </div>
-        <input type="text" id="personAcc" placeholder="Số tài khoản / Nickname (VD: 123456 hoặc an123)">
+        <input type="text" id="personAcc" placeholder="Số tài khoản / Nickname">
         <button class="btn-blue" onclick="addPerson()">+ Thêm Thành Viên</button>
         <div id="peopleList" class="list-box" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
         <button class="btn-red" onclick="clearAllData()">🗑 Xóa tất cả dữ liệu</button>
@@ -86,7 +90,7 @@
         <button class="btn-purple" onclick="calculateDebts()">🧮 TÍNH TOÁN & CHỐT SỔ</button>
         <div id="resultBox" style="margin-top: 20px;"></div>
         <div id="exportButtons" style="display: none; gap: 10px;">
-            <button class="btn-blue" onclick="copyResultText()">📋 Sao chép văn bản (Zalo/Mess)</button>
+            <button class="btn-blue" onclick="copyResultText()">📋 Sao chép văn bản</button>
             <button class="btn-green" onclick="showReceipt()">🖼 Xem Hóa đơn để chụp ảnh</button>
         </div>
     </div>
@@ -106,7 +110,6 @@
     let people = [];
     let expenses = [];
 
-    // Nạp dữ liệu an toàn
     try {
         let savedPeople = localStorage.getItem('ultimate_people');
         if (savedPeople) people = JSON.parse(savedPeople);
@@ -218,14 +221,31 @@
             </div>
         `).join('');
 
-        document.getElementById('expensesList').innerHTML = expenses.map(e => `
-            <div class="item-card"><b>${e.desc}</b>: <span style="color:#e74c3c; font-weight:bold;">${e.amount.toLocaleString('vi-VN')}đ</span> <br> <small style="color:#666;">👉 <b>${e.payer}</b> trả</small></div>
-        `).join('');
+        // SỬA LỖI HIỂN THỊ CHI TIẾT NGƯỜI THAM GIA Ở ĐÂY
+        document.getElementById('expensesList').innerHTML = expenses.map(e => {
+            let badgeHtml = '';
+            if (e.mode === 'mixed') badgeHtml = '<div class="badge badge-mixed">Riêng+Dư</div>';
+            else if (e.mode === 'exact') badgeHtml = '<div class="badge badge-exact">Tính riêng</div>';
+            else badgeHtml = '<div class="badge badge-exact" style="background:#e8f4f8; color:#2c3e50;">Chia chung</div>';
+
+            // Lấy danh sách tên những người tham gia
+            let involvedNames = e.involved.map(i => i.name).join(', ');
+
+            return `
+            <div class="item-card">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div><b>${e.desc}</b>: <span style="color:#e74c3c; font-weight:bold;">${e.amount.toLocaleString('vi-VN')}đ</span></div>
+                    ${badgeHtml}
+                </div>
+                <div style="color:#666; font-size: 0.9em; margin-top: 8px;">
+                    👉 <b>${e.payer}</b> trả cho <b>${e.involved.length} người</b>: <span style="color:#888;">${involvedNames}</span>
+                </div>
+            </div>`;
+        }).join('');
         
         if (document.getElementById('showStatsToggle').checked) toggleStats();
     }
 
-    // 📊 TÍNH NĂNG BIỂU ĐỒ THỐNG KÊ
     function toggleStats() {
         let box = document.getElementById('statsBox');
         if (!document.getElementById('showStatsToggle').checked) { box.style.display = 'none'; return; }
@@ -288,16 +308,13 @@
             let amount = Math.min(d[i].a, c[j].a);
             let creditor = people.find(p => p.name === c[j].n);
             
-            // Xử lý thông tin Ngân hàng và STK
             let hasBank = creditor && creditor.bank && creditor.account;
             let bankInfoText = hasBank ? ` (NH: ${creditor.bank}, STK: ${creditor.account})` : '';
             let qrUrl = hasBank ? `https://img.vietqr.io/image/${creditor.bank}-${creditor.account}-compact2.jpg?amount=${amount}&addInfo=Tra_tien_bill` : null;
             
-            // 1. Dòng văn bản để Copy
             let lineText = `👉 ${d[i].n} chuyển cho ${c[j].n}: ${amount.toLocaleString('vi-VN')}đ${bankInfoText}`;
             reportText += lineText + "\n";
 
-            // 2. Giao diện Web
             res.push(`
                 <div class="result-item">
                     <b>${d[i].n}</b> chuyển cho <b>${c[j].n}</b>: <span style="color:#d32f2f; font-weight:bold;">${amount.toLocaleString('vi-VN')}đ</span>
@@ -305,7 +322,6 @@
                     ${qrUrl ? `<div class="qr-box"><p style="margin:0 0 5px 0;"><small>Quét mã để trả nợ cho ${c[j].n}:</small></p><img src="${qrUrl}" class="qr-img"></div>` : ''}
                 </div>`);
 
-            // 3. Giao diện Hóa đơn Ảnh
             receiptTransferHtml += `
                 <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #ccc; text-align: center;">
                     <div style="font-size: 16px; margin-bottom: 5px;"><b>${d[i].n}</b> ➡️ <b>${c[j].n}</b></div>
@@ -354,7 +370,7 @@
                 ${receiptTransferHtml}
             </div>
         `;
-        window.scrollTo(0, 0); // Cuộn lên đầu trang
+        window.scrollTo(0, 0);
     }
 
     function hideReceipt() {
