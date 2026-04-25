@@ -1,6 +1,6 @@
 {
   "name": "Share Bill Ultimate",
-  "short_name": "Share Bill",
+  "short_name": "Share Bill Ultimate",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#2980b9",
