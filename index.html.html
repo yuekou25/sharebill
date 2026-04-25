@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share Bill & Tối Ưu Nợ</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2 { text-align: center; color: #2c3e50; }
+        .section { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        .section:last-child { border-bottom: none; }
+        input[type="text"], input[type="number"], select { width: calc(100% - 22px); padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        button { width: 100%; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #219150; }
+        .btn-add { background-color: #2980b9; margin-bottom: 15px; }
+        .btn-add:hover { background-color: #2471a3; }
+        .list-box { background: #f9f9f9; padding: 10px; border-radius: 6px; min-height: 50px; margin-bottom: 15px; }
+        
+        /* Cập nhật style cho danh sách khoản chi để trông giống nút bấm */
+        .list-item { background: #fff; padding: 12px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 15px; transition: background 0.2s;}
+        .expense-item:hover { background: #f1f8ff; }
+        
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        .checkbox-group label { background: #e8f4f8; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .result-item { background: #d4edda; color: #155724; padding: 12px; margin-bottom: 8px; border-radius: 6px; font-weight: bold; border-left: 5px solid #28a745; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>💸 Share Bill Thông Minh</h1>
+
+    <div class="section">
+        <h2>1. Thêm thành viên</h2>
+        <input type="text" id="personName" placeholder="Nhập tên (VD: An, Bình...)">
+        <button class="btn-add" onclick="addPerson()">+ Thêm Người</button>
+        <div id="peopleList" class="list-box"><i>Chưa có ai...</i></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Thêm khoản chi</h2>
+        <input type="text" id="billDesc" placeholder="Tên khoản chi (VD: Lẩu, Trà sữa...)">
+        
+        <input type="text" id="billAmount" placeholder="Tổng tiền (VND)" oninput="formatCurrency(this)">
+        
+        <label><b>Ai là người trả tiền?</b></label>
+        <select id="payerSelect">
+            <option value="">-- Chọn người trả --</option>
+        </select>
+
+        <label><b>Những ai dùng chung khoản này?</b></label>
+        <div id="involvedCheckboxes" class="checkbox-group">
+            <i>Hãy thêm thành viên ở Bước 1.</i>
+        </div>
+
+        <button class="btn-add" onclick="addExpense()">+ Thêm Khoản Chi</button>
+        <div id="expensesList" class="list-box"><i>Chưa có khoản chi nào...</i></div>
+    </div>
+
+    <div class="section">
+        <button onclick="calculateOptimizedDebts()">🧮 TÍNH TOÁN PHƯƠNG ÁN TỐI ƯU</button>
+        <h3 style="margin-top: 20px;">Kết quả (Ai chuyển cho ai):</h3>
+        <div id="resultBox">
+            <i>Kết quả sẽ hiển thị ở đây...</i>
+        </div>
+    </div>
+</div>
+
+<script>
+    let people = [];
+    let expenses = [];
+
+    // --- HÀM ĐỊNH DẠNG SỐ TIỀN ---
+    function formatCurrency(input) {
+        // Loại bỏ tất cả các ký tự không phải là số (bao gồm cả dấu chấm cũ)
+        let value = input.value.replace(/\D/g, '');
+        
+        // Thêm dấu chấm ngăn cách hàng nghìn
+        if (value !== "") {
+            input.value = parseInt(value, 10).toLocaleString('vi-VN');
+        } else {
+            input.value = "";
+        }
+    }
+
+    // --- XỬ LÝ GIAO DIỆN ---
+    function addPerson() {
+        let nameInput = document.getElementById('personName');
+        let name = nameInput.value.trim();
+        if (name && !people.includes(name)) {
+            people.push(name);
+            nameInput.value = '';
+            updateUI();
+        } else {
+            alert("Vui lòng nhập tên hợp lệ và không trùng lặp!");
+        }
+    }
+
+    function addExpense() {
+        let desc = document.getElementById('billDesc').value.trim();
+        
+        // Lấy số tiền dạng chuỗi, xóa bỏ dấu chấm, rồi chuyển thành số
+        let amountStr = document.getElementById('billAmount').value.replace(/\D/g, '');
+        let amount = parseFloat(amountStr);
+        
+        let payer = document.getElementById('payerSelect').value;
+        let checkboxes = document.querySelectorAll('.involve-cb:checked');
+        let involved = Array.from(checkboxes).map(cb => cb.value);
+
+        if (!desc || isNaN(amount) || amount <= 0 || !payer || involved.length === 0) {
+            alert("Vui lòng nhập đầy đủ thông tin khoản chi, chọn người trả và ít nhất 1 người tham gia!");
+            return;
+        }
+
+        expenses.push({ desc, amount, payer, involved });
+        
+        // Reset form
+        document.getElementById('billDesc').value = '';
+        document.getElementById('billAmount').value = '';
+        
+        updateUI();
+    }
+
+    // --- HÀM ẨN/HIỆN CHI TIẾT NGƯỜI THAM GIA ---
+    function toggleDetails(index) {
+        let detailDiv = document.getElementById(`detail-${index}`);
+        let iconSpan = document.getElementById(`icon-${index}`);
+        
+        if (detailDiv.style.display === "none") {
+            detailDiv.style.display = "block";
+            iconSpan.innerHTML = "▴"; // Mũi tên hướng lên
+        } else {
+            detailDiv.style.display = "none";
+            iconSpan.innerHTML = "▾"; // Mũi tên hướng xuống
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('peopleList').innerHTML = people.length ? people.map(p => `<div class="list-item">👤 ${p}</div>`).join('') : '<i>Chưa có ai...</i>';
+        
+        let payerSelect = document.getElementById('payerSelect');
+        let currentPayer = payerSelect.value;
+        payerSelect.innerHTML = '<option value="">-- Chọn người trả --</option>' + people.map(p => `<option value="${p}">${p}</option>`).join('');
+        if (people.includes(currentPayer)) payerSelect.value = currentPayer;
+
+        document.getElementById('involvedCheckboxes').innerHTML = people.length ? people.map(p => `<label><input type="checkbox" class="involve-cb" value="${p}" checked> ${p}</label>`).join('') : '<i>Hãy thêm thành viên ở Bước 1.</i>';
+
+        // Cập nhật danh sách khoản chi: Thêm sự kiện onclick và thẻ ẩn chứa danh sách người
+        if (expenses.length) {
+            document.getElementById('expensesList').innerHTML = expenses.map((e, index) => `
+                <div class="list-item expense-item" onclick="toggleDetails(${index})" style="cursor: pointer;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>🧾 <b>${e.desc}</b>: ${e.amount.toLocaleString('vi-VN')} VND</span>
+                        <span style="color: #666; font-size: 0.9em;">
+                            (<b>${e.payer}</b> trả cho ${e.involved.length} người) <span id="icon-${index}">▾</span>
+                        </span>
+                    </div>
+                    <div id="detail-${index}" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc; font-size: 0.9em; color: #444;">
+                        <b>Người tham gia:</b> ${e.involved.join(', ')}
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            document.getElementById('expensesList').innerHTML = '<i>Chưa có khoản chi nào...</i>';
+        }
+    }
+
+    // --- THUẬT TOÁN TỐI GIẢN NỢ ---
+    function calculateOptimizedDebts() {
+        if (expenses.length === 0) {
+            alert("Hãy thêm ít nhất một khoản chi để tính toán!");
+            return;
+        }
+
+        let balances = {};
+        people.forEach(p => balances[p] = 0);
+
+        expenses.forEach(exp => {
+            balances[exp.payer] += exp.amount;
+            let splitAmount = exp.amount / exp.involved.length;
+            exp.involved.forEach(p => { balances[p] -= splitAmount; });
+        });
+
+        let debtors = [];
+        let creditors = [];
+
+        for (let p in balances) {
+            let bal = Math.round(balances[p]);
+            if (bal < 0) debtors.push({ name: p, amount: -bal });
+            else if (bal > 0) creditors.push({ name: p, amount: bal });
+        }
+
+        debtors.sort((a, b) => b.amount - a.amount);
+        creditors.sort((a, b) => b.amount - a.amount);
+
+        let results = [];
+        let i = 0, j = 0;
+
+        while (i < debtors.length && j < creditors.length) {
+            let debtor = debtors[i];
+            let creditor = creditors[j];
+            let settledAmount = Math.min(debtor.amount, creditor.amount);
+
+            results.push(`<div class="result-item">👉 <b>${debtor.name}</b> cần chuyển khoản cho <b>${creditor.name}</b> số tiền: <b>${settledAmount.toLocaleString('vi-VN')} VND</b></div>`);
+
+            debtor.amount -= settledAmount;
+            creditor.amount -= settledAmount;
+
+            if (debtor.amount === 0) i++;
+            if (creditor.amount === 0) j++;
+        }
+
+        let resultBox = document.getElementById('resultBox');
+        if (results.length > 0) {
+            resultBox.innerHTML = results.join('');
+        } else {
+            resultBox.innerHTML = '<div class="result-item" style="background:#e2e3e5; color:#383d41; border-color:#d6d8db;">🎉 Tuyệt vời! Không ai nợ ai đồng nào cả.</div>';
+        }
+    }
+</script>
+
+</body>
+</html>
