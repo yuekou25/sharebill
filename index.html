@@ -8,15 +8,15 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135706.png">
     
     <title>Share Bill Ultimate</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
-        /* BIẾN MÀU SẮC GIAO DIỆN SÁNG (MẶC ĐỊNH) */
         :root { 
             --primary: #2980b9; --secondary: #27ae60; --danger: #e74c3c; --purple: #8e44ad; 
             --bg-color: #f0f2f5; --card-bg: #ffffff; --text-color: #333333; 
             --border-color: #eeeeee; --input-bg: #ffffff; --muted-text: #666666;
             --box-bg: #f8fafc;
         }
-        /* BIẾN MÀU SẮC GIAO DIỆN TỐI (DARK MODE) */
         body.dark-mode {
             --bg-color: #121212; --card-bg: #1e1e1e; --text-color: #f5f5f5; 
             --border-color: #333333; --input-bg: #2d2d2d; --muted-text: #aaaaaa;
@@ -34,7 +34,6 @@
         button { width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
         .btn-blue { background-color: var(--primary); } .btn-green { background-color: var(--secondary); }
         .btn-red { background-color: var(--danger); } .btn-purple { background-color: var(--purple); }
-        button:hover { filter: brightness(1.1); transform: translateY(-1px); }
         
         .list-box { background: var(--box-bg); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .item-card { background: var(--card-bg); padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
@@ -46,8 +45,11 @@
         .qr-box { text-align: center; margin-top: 10px; padding: 15px; border: 1px dashed var(--border-color); border-radius: 8px; background: var(--box-bg); }
         .qr-img { max-width: 180px; border-radius: 8px; margin-top: 5px; }
         
-        .receipt-view { display: none; background: #fff; color: #000; padding: 30px; border: 1px solid #ccc; font-family: 'Courier New', Courier, monospace; max-width: 500px; margin: auto; }
+        /* Cấu trúc lại giao diện in bill */
+        .receipt-wrapper { display: none; max-width: 500px; margin: auto; }
+        .receipt-capture-area { background: #ffffff; color: #000000; padding: 30px; font-family: 'Courier New', Courier, monospace; }
         .receipt-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+        .action-buttons { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
         
         .stats-box { background: var(--box-bg); border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; margin-top: 20px; display: none; }
         .stat-bar-container { width: 100%; background: var(--border-color); border-radius: 6px; height: 10px; margin-top: 5px; overflow: hidden; }
@@ -56,11 +58,10 @@
         .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;}
         .badge-exact { background-color: rgba(41, 128, 185, 0.2); color: #3498db; }
         .badge-mixed { background-color: rgba(243, 156, 18, 0.2); color: #f39c12; }
-
-        /* Nút bật/tắt Dark Mode */
+        
         .theme-toggle { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; width: auto; padding: 0; margin: 0; }
         
-        .expense-header { cursor: pointer; transition: 0.2s; } .expense-header:hover { opacity: 0.8; }
+        .expense-header { cursor: pointer; transition: 0.2s; }
         .expense-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-color); font-size: 14px; color: var(--text-color); background-color: var(--box-bg); border-radius: 6px; padding: 10px; }
         .detail-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border-color); }
         .detail-row:last-child { border-bottom: none; }
@@ -104,7 +105,6 @@
         <div id="involvedRows" class="involved-list"></div>
 
         <button class="btn-green" onclick="addExpense()">+ Thêm Khoản Chi</button>
-        
         <div id="expensesList" class="list-box"></div>
         
         <label style="cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: bold; margin-top: 15px; padding: 10px; background: var(--box-bg); border-radius: 8px;">
@@ -118,26 +118,36 @@
         <div id="resultBox" style="margin-top: 20px;"></div>
         <div id="exportButtons" style="display: none; gap: 10px;">
             <button class="btn-blue" onclick="copyResultText()">📋 Copy văn bản</button>
-            <button class="btn-green" onclick="showReceipt()">🖼 In Hóa đơn</button>
+            <button class="btn-green" onclick="showReceipt()">🖼 Mở Hóa đơn để Lưu</button>
         </div>
     </div>
 </div>
 
-<div id="receiptSection" class="receipt-view">
-    <div class="receipt-header">
-        <h2 style="margin:0">HÓA ĐƠN CHI TIÊU</h2>
-        <p id="receiptDate" style="margin: 5px 0; font-size: 14px; color: #666;"></p>
+<div id="receiptWrapper" class="receipt-wrapper">
+    <div id="receiptCaptureArea" class="receipt-capture-area">
+        <div class="receipt-header">
+            <h2 style="margin:0; font-family: 'Courier New', Courier, monospace; color: #000;">HÓA ĐƠN CHI TIÊU</h2>
+            <p id="receiptDate" style="margin: 5px 0; font-size: 14px; color: #333;"></p>
+        </div>
+        <div id="receiptContent"></div>
+        <p style="text-align: center; margin-top: 30px; font-weight: bold; color: #000;">--- CẢM ƠN BẠN ---</p>
     </div>
-    <div id="receiptContent"></div>
-    <p style="text-align: center; margin-top: 30px; font-weight: bold;">--- CẢM ƠN BẠN ---</p>
-    <button class="btn-red" style="margin-top: 20px;" onclick="hideReceipt()">Quay lại ứng dụng</button>
+    
+    <div id="renderResult" style="display:none; text-align:center; margin-top:15px; border: 2px solid #27ae60; padding:10px; background: #e8f5e9;">
+        <p style="color: #2e7d32; font-weight: bold; margin-top:0;">✅ Đã tạo ảnh thành công!</p>
+        <p style="font-size: 14px; color: #333;">(Nếu ảnh không tự tải xuống, hãy nhấn giữ vào bức ảnh bên dưới và chọn "Lưu hình ảnh")</p>
+        <img id="finalRenderedImage" style="max-width: 100%; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+    </div>
+
+    <div class="action-buttons">
+        <button class="btn-blue" onclick="downloadImage()" id="btnDownload">💾 Tải ảnh hóa đơn về máy</button>
+        <button class="btn-red" onclick="hideReceipt()">❌ Đóng Hóa đơn</button>
+    </div>
 </div>
 
 <script>
-    // --- KHỞI TẠO DARK MODE ---
     if(localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-        document.getElementById('themeBtn').innerText = '☀️';
+        document.body.classList.add('dark-mode'); document.getElementById('themeBtn').innerText = '☀️';
     }
     function toggleTheme() {
         document.body.classList.toggle('dark-mode');
@@ -146,193 +156,150 @@
         document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
     }
 
-    // --- CÀI ĐẶT APP OFFLINE (SERVICE WORKER) ---
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(() => console.log("App đã sẵn sàng chạy Offline!"));
-    }
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(err => console.log(err)); }
 
-    // --- LOGIC CHIA TIỀN (Giữ nguyên như bản trước) ---
-    let people = [];
-    let expenses = [];
+    let people = []; let expenses = [];
     try {
-        let savedPeople = localStorage.getItem('ultimate_people');
-        if (savedPeople) people = JSON.parse(savedPeople);
-        let savedExpenses = localStorage.getItem('ultimate_expenses');
-        if (savedExpenses) expenses = JSON.parse(savedExpenses);
+        let savedPeople = localStorage.getItem('ultimate_people'); if (savedPeople) people = JSON.parse(savedPeople);
+        let savedExpenses = localStorage.getItem('ultimate_expenses'); if (savedExpenses) expenses = JSON.parse(savedExpenses);
     } catch (e) { localStorage.clear(); }
 
     window.onload = () => updateUI();
 
-    function saveData() {
-        localStorage.setItem('ultimate_people', JSON.stringify(people));
-        localStorage.setItem('ultimate_expenses', JSON.stringify(expenses));
-    }
+    function saveData() { localStorage.setItem('ultimate_people', JSON.stringify(people)); localStorage.setItem('ultimate_expenses', JSON.stringify(expenses)); }
 
     function clearAllData() {
-        if(confirm("Xóa toàn bộ dữ liệu?")) {
-            localStorage.clear(); people = []; expenses = [];
-            updateUI(); document.getElementById('resultBox').innerHTML = '';
-            document.getElementById('exportButtons').style.display = 'none';
-        }
+        if(confirm("Xóa toàn bộ dữ liệu?")) { localStorage.clear(); people = []; expenses = []; updateUI(); document.getElementById('resultBox').innerHTML = ''; document.getElementById('exportButtons').style.display = 'none'; }
     }
 
     function formatMathInput(i) { i.value = i.value.replace(/[^0-9.,+\- kK]/g, ''); }
     function parseMath(str) {
-        if (!str) return 0;
-        str = str.replace(/[.,]/g, '').replace(/[kK]/g, '000').replace(/[^0-9+\-]/g, '');
+        if (!str) return 0; str = str.replace(/[.,]/g, '').replace(/[kK]/g, '000').replace(/[^0-9+\-]/g, '');
         let tokens = str.split(/([+\-])/), total = 0, op = '+';
         for (let t of tokens) {
-            if (t === '+' || t === '-') op = t;
-            else if (t !== '') { let n = parseFloat(t); if (!isNaN(n)) total = (op === '+') ? total + n : total - n; }
+            if (t === '+' || t === '-') op = t; else if (t !== '') { let n = parseFloat(t); if (!isNaN(n)) total = (op === '+') ? total + n : total - n; }
         }
         return total;
     }
     function applyMathEval(i) { let v = parseMath(i.value); i.value = v ? v.toLocaleString('vi-VN') : ''; }
 
     function addPerson() {
-        let n = document.getElementById('personName').value.trim();
-        let b = document.getElementById('personBank').value.trim();
-        let a = document.getElementById('personAcc').value.trim();
-        if (n && !people.find(p => p.name === n)) {
-            people.push({ name: n, bank: b, account: a });
-            document.getElementById('personName').value = '';
-            document.getElementById('personBank').value = '';
-            document.getElementById('personAcc').value = '';
-            saveData(); updateUI();
-        } else if (!n) { alert("Vui lòng nhập tên!"); }
+        let n = document.getElementById('personName').value.trim(); let b = document.getElementById('personBank').value.trim(); let a = document.getElementById('personAcc').value.trim();
+        if (n && !people.find(p => p.name === n)) { people.push({ name: n, bank: b, account: a }); document.getElementById('personName').value = ''; document.getElementById('personBank').value = ''; document.getElementById('personAcc').value = ''; saveData(); updateUI(); } 
+        else if (!n) { alert("Vui lòng nhập tên!"); }
     }
 
     function addExpense() {
-        let desc = document.getElementById('billDesc').value.trim() || "Khoản chi không tên";
-        let payer = document.getElementById('payerSelect').value;
-        let mode = document.getElementById('splitMode').value;
-        let totalBill = parseMath(document.getElementById('billTotal').value);
-        let involved = [];
-
+        let desc = document.getElementById('billDesc').value.trim() || "Khoản chi"; let payer = document.getElementById('payerSelect').value; let mode = document.getElementById('splitMode').value;
+        let totalBill = parseMath(document.getElementById('billTotal').value); let involved = [];
         if (mode === 'exact') {
             let sumExact = 0; let checkedCount = 0;
-            document.querySelectorAll('.involved-row').forEach(row => {
-                let cb = row.querySelector('.involve-cb');
-                if (cb.checked) { checkedCount++; sumExact += parseMath(row.querySelector('.exact-input').value); }
-            });
+            document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) { checkedCount++; sumExact += parseMath(row.querySelector('.exact-input').value); } });
             let shared = (totalBill > sumExact) ? (totalBill - sumExact) / checkedCount : 0;
-            document.querySelectorAll('.involved-row').forEach(row => {
-                let cb = row.querySelector('.involve-cb');
-                if (cb.checked) { let own = parseMath(row.querySelector('.exact-input').value); involved.push({ name: cb.value, owed: own + shared }); }
-            });
+            document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) { let own = parseMath(row.querySelector('.exact-input').value); involved.push({ name: cb.value, owed: own + shared }); } });
             if (totalBill === 0) totalBill = sumExact;
         } else {
-            if (totalBill <= 0) { alert("Vui lòng nhập tổng tiền!"); return; }
-            let tW = 0;
-            document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) tW += parseFloat(row.querySelector('.weight-input').value); });
+            if (totalBill <= 0) { alert("Nhập tổng tiền!"); return; }
+            let tW = 0; document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) tW += parseFloat(row.querySelector('.weight-input').value); });
             document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) involved.push({ name: cb.value, owed: (totalBill / tW) * parseFloat(row.querySelector('.weight-input').value) }); });
         }
         if (!payer || involved.length === 0) { alert("Thiếu thông tin!"); return; }
-        expenses.push({ desc, amount: totalBill, payer, involved, mode });
-        saveData(); updateUI();
-        document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = '';
+        expenses.push({ desc, amount: totalBill, payer, involved, mode }); saveData(); updateUI(); document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = '';
     }
 
     function toggleDetails(index) {
-        let detailDiv = document.getElementById(`detail-${index}`);
-        let iconSpan = document.getElementById(`icon-${index}`);
-        if (detailDiv.style.display === "block") { detailDiv.style.display = "none"; iconSpan.style.transform = "rotate(0deg)"; } 
-        else { detailDiv.style.display = "block"; iconSpan.style.transform = "rotate(180deg)"; }
+        let d = document.getElementById(`detail-${index}`); let i = document.getElementById(`icon-${index}`);
+        if (d.style.display === "block") { d.style.display = "none"; i.style.transform = "rotate(0deg)"; } else { d.style.display = "block"; i.style.transform = "rotate(180deg)"; }
     }
 
     function updateUI() {
         document.getElementById('peopleList').innerHTML = people.map(p => `<span class="item-card" style="margin:0; font-size:14px;">👤 <b>${p.name}</b> ${p.account ? `<br><small style="color:var(--muted-text)">${p.bank}: ${p.account}</small>` : ''}</span>`).join('');
-        let ps = document.getElementById('payerSelect'); let cur = ps.value;
-        ps.innerHTML = '<option value="">-- Người trả --</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join(''); ps.value = cur;
+        let ps = document.getElementById('payerSelect'); let cur = ps.value; ps.innerHTML = '<option value="">-- Người trả --</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join(''); ps.value = cur;
         let mode = document.getElementById('splitMode').value;
-        document.getElementById('involvedRows').innerHTML = people.map(p => `
-            <div class="involved-row">
-                <label><input type="checkbox" class="involve-cb" value="${p.name}" checked> <b>${p.name}</b></label>
-                <div class="flex-inputs">${mode === 'exact' ? `Tiền: <input type="text" class="exact-input" placeholder="VD: 30k" onblur="applyMathEval(this)">` : `Suất: <input type="number" class="weight-input" value="1" step="0.1">`}</div>
-            </div>`).join('');
-
+        document.getElementById('involvedRows').innerHTML = people.map(p => `<div class="involved-row"><label><input type="checkbox" class="involve-cb" value="${p.name}" checked> <b>${p.name}</b></label><div class="flex-inputs">${mode === 'exact' ? `Tiền: <input type="text" class="exact-input" placeholder="VD: 30k" onblur="applyMathEval(this)">` : `Suất: <input type="number" class="weight-input" value="1" step="0.1">`}</div></div>`).join('');
+        
         document.getElementById('expensesList').innerHTML = expenses.map((e, idx) => {
             let badgeHtml = e.mode === 'mixed' ? '<div class="badge badge-mixed">Riêng+Dư</div>' : e.mode === 'exact' ? '<div class="badge badge-exact">Tính riêng</div>' : '<div class="badge badge-exact">Chia chung</div>';
-            let detailsHtml = e.involved.map(i => {
-                let owedAmount = i.owed !== undefined ? i.owed : ((e.amount / e.involved.reduce((sum, item) => sum + (item.weight || 0), 0)) * (i.weight || 0));
-                return `<div class="detail-row"><span>👤 ${i.name}</span><b>${Math.round(owedAmount).toLocaleString('vi-VN')}đ</b></div>`;
-            }).join('');
-            return `
-            <div class="item-card">
-                <div class="expense-header" onclick="toggleDetails(${idx})" title="Ấn vào để xem chi tiết">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div><b>${e.desc}</b>: <span style="color:var(--danger); font-weight:bold; font-size:16px;">${e.amount.toLocaleString('vi-VN')}đ</span></div>${badgeHtml}
-                    </div>
-                    <div style="color:var(--muted-text); font-size: 0.9em; margin-top: 8px;">👉 <b>${e.payer}</b> trả cho <b>${e.involved.length} người</b> <span id="icon-${idx}" class="toggle-icon">▼</span></div>
-                </div>
-                <div id="detail-${idx}" class="expense-details">
-                    <div style="margin-bottom: 8px; font-style: italic; font-size: 13px;">Bảng chia tiền:</div>${detailsHtml}
-                </div>
-            </div>`;
+            let detailsHtml = e.involved.map(i => { let o = i.owed !== undefined ? i.owed : ((e.amount / e.involved.reduce((s, it) => s + (it.weight || 0), 0)) * (i.weight || 0)); return `<div class="detail-row"><span>👤 ${i.name}</span><b>${Math.round(o).toLocaleString('vi-VN')}đ</b></div>`; }).join('');
+            return `<div class="item-card"><div class="expense-header" onclick="toggleDetails(${idx})"><div style="display: flex; justify-content: space-between; align-items: start;"><div><b>${e.desc}</b>: <span style="color:var(--danger); font-weight:bold; font-size:16px;">${e.amount.toLocaleString('vi-VN')}đ</span></div>${badgeHtml}</div><div style="color:var(--muted-text); font-size: 0.9em; margin-top: 8px;">👉 <b>${e.payer}</b> trả cho <b>${e.involved.length} người</b> <span id="icon-${idx}" class="toggle-icon">▼</span></div></div><div id="detail-${idx}" class="expense-details"><div style="margin-bottom: 8px; font-style: italic;">Bảng chia tiền:</div>${detailsHtml}</div></div>`;
         }).join('');
         if (document.getElementById('showStatsToggle').checked) toggleStats();
     }
 
     function toggleStats() {
-        let box = document.getElementById('statsBox');
-        if (!document.getElementById('showStatsToggle').checked) { box.style.display = 'none'; return; }
-        box.style.display = 'block';
+        let box = document.getElementById('statsBox'); if (!document.getElementById('showStatsToggle').checked) { box.style.display = 'none'; return; } box.style.display = 'block';
         let s = {}; let total = 0; expenses.forEach(e => { s[e.desc] = (s[e.desc] || 0) + e.amount; total += e.amount; });
         if (total === 0) { box.innerHTML = '<p style="text-align:center;">Chưa có dữ liệu</p>'; return; }
         let colors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6', '#e67e22', '#1abc9c'];
         let html = `<h3 style="margin-top:0; color:var(--text-color);">📊 Tổng Chi: ${total.toLocaleString('vi-VN')}đ</h3>`;
-        let i = 0;
-        for (let k in s) {
-            let pct = (s[k] / total * 100).toFixed(1); let color = colors[i % colors.length];
-            html += `<div style="margin-bottom: 12px;"><div style="display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 4px;"><b>${k}</b> <span>${s[k].toLocaleString('vi-VN')}đ (<b style="color:${color}">${pct}%</b>)</span></div><div class="stat-bar-container"><div class="stat-bar" style="width: ${pct}%; background-color: ${color};"></div></div></div>`; i++;
-        }
+        let i = 0; for (let k in s) { let pct = (s[k] / total * 100).toFixed(1); let color = colors[i % colors.length]; html += `<div style="margin-bottom: 12px;"><div style="display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 4px;"><b>${k}</b> <span>${s[k].toLocaleString('vi-VN')}đ (<b style="color:${color}">${pct}%</b>)</span></div><div class="stat-bar-container"><div class="stat-bar" style="width: ${pct}%; background-color: ${color};"></div></div></div>`; i++; }
         box.innerHTML = html;
     }
 
     let reportText = ""; let receiptTransferHtml = "";
     function calculateDebts() {
-        if (!expenses.length) return;
-        let bal = {}; people.forEach(p => bal[p.name] = 0);
-        expenses.forEach(e => {
-            bal[e.payer] += e.amount;
-            e.involved.forEach(i => {
-                let owedAmount = i.owed !== undefined ? i.owed : ((e.amount / e.involved.reduce((sum, item) => sum + (item.weight || 0), 0)) * (i.weight || 0));
-                bal[i.name] -= owedAmount;
-            });
-        });
-
-        let d = [], c = [];
-        for (let p in bal) { let v = Math.round(bal[p]); if (v < 0) d.push({ n: p, a: -v }); else if (v > 0) c.push({ n: p, a: v }); }
+        if (!expenses.length) return; let bal = {}; people.forEach(p => bal[p.name] = 0);
+        expenses.forEach(e => { bal[e.payer] += e.amount; e.involved.forEach(i => { let o = i.owed !== undefined ? i.owed : ((e.amount / e.involved.reduce((s, it) => s + (it.weight || 0), 0)) * (i.weight || 0)); bal[i.name] -= o; }); });
+        let d = [], c = []; for (let p in bal) { let v = Math.round(bal[p]); if (v < 0) d.push({ n: p, a: -v }); else if (v > 0) c.push({ n: p, a: v }); }
         d.sort((a,b)=>b.a-a.a); c.sort((a,b)=>b.a-a.a);
-
         let res = [], i = 0, j = 0; reportText = "💸 TỔNG KẾT CHI PHÍ\n------------------\n"; receiptTransferHtml = "";
         while (i < d.length && j < c.length) {
             let amount = Math.min(d[i].a, c[j].a); let creditor = people.find(p => p.name === c[j].n);
-            let hasBank = creditor && creditor.bank && creditor.account;
-            let bankInfoText = hasBank ? ` (NH: ${creditor.bank}, STK: ${creditor.account})` : '';
-            let qrUrl = hasBank ? `https://img.vietqr.io/image/${creditor.bank}-${creditor.account}-compact2.jpg?amount=${amount}&addInfo=Tra_tien_bill` : null;
-            
-            let lineText = `👉 ${d[i].n} chuyển cho ${c[j].n}: ${amount.toLocaleString('vi-VN')}đ${bankInfoText}`; reportText += lineText + "\n";
-
-            res.push(`<div class="result-item"><b>${d[i].n}</b> chuyển cho <b>${c[j].n}</b>: <span style="color:var(--danger); font-weight:bold;">${amount.toLocaleString('vi-VN')}đ</span>${hasBank ? `<br><small style="color:var(--muted-text);">🏦 ${creditor.bank} - STK: <b>${creditor.account}</b></small>` : ''}${qrUrl ? `<div class="qr-box"><p style="margin:0 0 5px 0;"><small>Quét mã để trả nợ cho ${c[j].n}:</small></p><img src="${qrUrl}" class="qr-img"></div>` : ''}</div>`);
-
-            receiptTransferHtml += `<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #ccc; text-align: center;"><div style="font-size: 16px; margin-bottom: 5px;"><b>${d[i].n}</b> ➡️ <b>${c[j].n}</b></div><div style="font-size: 20px; font-weight: bold;">${amount.toLocaleString('vi-VN')}đ</div>${hasBank ? `<div style="font-size: 14px; margin-top: 5px;">NH: ${creditor.bank} - STK: ${creditor.account}</div>` : ''}${qrUrl ? `<img src="${qrUrl}" style="max-width: 160px; margin-top: 15px; border-radius: 8px;">` : ''}</div>`;
-
+            let hasBank = creditor && creditor.bank && creditor.account; let qrUrl = hasBank ? `https://img.vietqr.io/image/${creditor.bank}-${creditor.account}-compact2.jpg?amount=${amount}&addInfo=Tra_tien_bill` : null;
+            let lineText = `👉 ${d[i].n} chuyển cho ${c[j].n}: ${amount.toLocaleString('vi-VN')}đ${hasBank ? ` (NH: ${creditor.bank}, STK: ${creditor.account})` : ''}`; reportText += lineText + "\n";
+            res.push(`<div class="result-item"><b>${d[i].n}</b> chuyển cho <b>${c[j].n}</b>: <span style="color:var(--danger); font-weight:bold;">${amount.toLocaleString('vi-VN')}đ</span>${hasBank ? `<br><small style="color:var(--muted-text);">🏦 ${creditor.bank} - STK: <b>${creditor.account}</b></small>` : ''}${qrUrl ? `<div class="qr-box"><p style="margin:0 0 5px 0;"><small>Quét mã để trả nợ:</small></p><img src="${qrUrl}" class="qr-img"></div>` : ''}</div>`);
+            receiptTransferHtml += `<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #ccc; text-align: center;"><div style="font-size: 16px; margin-bottom: 5px; color:#000;"><b>${d[i].n}</b> ➡️ <b>${c[j].n}</b></div><div style="font-size: 20px; font-weight: bold; color:#000;">${amount.toLocaleString('vi-VN')}đ</div>${hasBank ? `<div style="font-size: 14px; margin-top: 5px; color:#333;">NH: ${creditor.bank} - STK: ${creditor.account}</div>` : ''}${qrUrl ? `<img src="${qrUrl}" crossorigin="anonymous" style="max-width: 160px; margin-top: 15px; border-radius: 8px; border:1px solid #ccc;">` : ''}</div>`;
             d[i].a -= amount; c[j].a -= amount; if (d[i].a === 0) i++; if (c[j].a === 0) j++;
         }
-        document.getElementById('resultBox').innerHTML = res.join('') || "<div class='result-item'>🎉 Tuyệt vời! Đã bù trừ xong, không ai nợ ai!</div>";
-        document.getElementById('exportButtons').style.display = 'flex';
+        document.getElementById('resultBox').innerHTML = res.join('') || "<div class='result-item'>🎉 Tuyệt vời! Đã bù trừ xong!</div>"; document.getElementById('exportButtons').style.display = 'flex';
     }
 
-    function copyResultText() { navigator.clipboard.writeText(reportText).then(() => alert("Đã copy văn bản thành công!")); }
+    function copyResultText() { navigator.clipboard.writeText(reportText).then(() => alert("Đã copy văn bản!")); }
+    
     function showReceipt() {
-        document.getElementById('mainApp').style.display = 'none'; document.getElementById('receiptSection').style.display = 'block';
-        let d = new Date(); document.getElementById('receiptDate').innerText = `Ngày in: ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
+        document.getElementById('mainApp').style.display = 'none'; 
+        document.getElementById('receiptWrapper').style.display = 'block';
+        document.getElementById('renderResult').style.display = 'none';
+        document.getElementById('receiptCaptureArea').style.display = 'block';
+        document.getElementById('btnDownload').style.display = 'block';
+        document.getElementById('btnDownload').innerText = "💾 Tải ảnh hóa đơn về máy";
+
+        let d = new Date(); document.getElementById('receiptDate').innerText = `Ngày: ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
         let totalAll = expenses.reduce((s, e) => s + e.amount, 0);
-        document.getElementById('receiptContent').innerHTML = `<div style="margin-bottom: 30px;"><h4 style="margin-bottom: 10px; text-decoration: underline;">1. CÁC KHOẢN CHI:</h4>${expenses.map(e => `<div style="display: flex; justify-content: space-between; padding: 5px 0;"><span>- ${e.desc}</span><b>${e.amount.toLocaleString('vi-VN')}đ</b></div>`).join('')}<div style="display: flex; justify-content: space-between; padding-top: 10px; margin-top: 10px; border-top: 2px solid #000; font-weight: bold; font-size: 18px;"><span>TỔNG CỘNG:</span><span>${totalAll.toLocaleString('vi-VN')}đ</span></div></div><div><h4 style="margin-bottom: 15px; text-decoration: underline;">2. CHUYỂN KHOẢN:</h4>${receiptTransferHtml}</div>`;
+        document.getElementById('receiptContent').innerHTML = `<div style="margin-bottom: 30px; color:#000;"><h4 style="margin-bottom: 10px; text-decoration: underline;">1. CÁC KHOẢN CHI:</h4>${expenses.map(e => `<div style="display: flex; justify-content: space-between; padding: 5px 0;"><span>- ${e.desc}</span><b>${e.amount.toLocaleString('vi-VN')}đ</b></div>`).join('')}<div style="display: flex; justify-content: space-between; padding-top: 10px; margin-top: 10px; border-top: 2px solid #000; font-weight: bold; font-size: 18px;"><span>TỔNG CỘNG:</span><span>${totalAll.toLocaleString('vi-VN')}đ</span></div></div><div><h4 style="margin-bottom: 15px; text-decoration: underline; color:#000;">2. CHUYỂN KHOẢN:</h4>${receiptTransferHtml}</div>`;
         window.scrollTo(0, 0);
     }
-    function hideReceipt() { document.getElementById('mainApp').style.display = 'block'; document.getElementById('receiptSection').style.display = 'none'; }
+    
+    function hideReceipt() { document.getElementById('mainApp').style.display = 'block'; document.getElementById('receiptWrapper').style.display = 'none'; }
+
+    // --- TÍNH NĂNG TẠO ẢNH XUẤT SẮC ---
+    function downloadImage() {
+        let btn = document.getElementById('btnDownload');
+        btn.innerText = "⏳ Đang tạo ảnh...";
+        
+        let captureArea = document.getElementById('receiptCaptureArea');
+        
+        // Gọi thư viện tạo ảnh, cho phép tải QR code từ link ngoài (useCORS)
+        html2canvas(captureArea, { useCORS: true, backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
+            let imgData = canvas.toDataURL("image/png");
+            
+            // Ẩn vùng mã HTML, hiển thị khung ảnh đã render để người dùng di động dễ nhấn giữ lưu
+            captureArea.style.display = 'none';
+            let renderBox = document.getElementById('renderResult');
+            renderBox.style.display = 'block';
+            document.getElementById('finalRenderedImage').src = imgData;
+            btn.style.display = 'none';
+
+            // Tự động kích hoạt tải xuống cho máy tính hoặc các trình duyệt cho phép
+            let link = document.createElement('a');
+            link.download = 'HoaDon_ShareBill.png';
+            link.href = imgData;
+            link.click();
+        }).catch(err => {
+            alert("Đã xảy ra lỗi khi tạo ảnh. Vui lòng thử lại!");
+            btn.innerText = "💾 Tải ảnh hóa đơn về máy";
+        });
+    }
 </script>
 </body>
 </html>
