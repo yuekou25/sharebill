@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Share Bill Ultimate - QR & Biểu Đồ</title>
+    <title>Share Bill Ultimate - Chi Tiết & Biểu Đồ</title>
     <style>
         :root { --primary: #2980b9; --secondary: #27ae60; --danger: #e74c3c; --purple: #8e44ad; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #333; line-height: 1.5; }
@@ -40,6 +40,14 @@
         .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;}
         .badge-exact { background-color: #e8f4f8; color: #2980b9; border: 1px solid #bce8f1;}
         .badge-mixed { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba;}
+
+        /* CSS mới cho phần xem chi tiết */
+        .expense-header { cursor: pointer; transition: 0.2s; }
+        .expense-header:hover { opacity: 0.8; }
+        .expense-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e2e8f0; font-size: 14px; color: #444; background-color: #fafbfc; border-radius: 6px; padding: 10px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f1f5f9; }
+        .detail-row:last-child { border-bottom: none; }
+        .toggle-icon { display: inline-block; transition: transform 0.3s; font-size: 12px; color: #888; }
     </style>
 </head>
 <body>
@@ -78,6 +86,7 @@
         <div id="involvedRows" class="involved-list"></div>
 
         <button class="btn-green" onclick="addExpense()">+ Thêm Khoản Chi</button>
+        
         <div id="expensesList" class="list-box"></div>
         
         <label style="cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: bold; margin-top: 15px; padding: 10px; background: #e8f4f8; border-radius: 8px;">
@@ -203,6 +212,19 @@
         document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = '';
     }
 
+    // TÍNH NĂNG XEM CHI TIẾT KHOẢN CHI
+    function toggleDetails(index) {
+        let detailDiv = document.getElementById(`detail-${index}`);
+        let iconSpan = document.getElementById(`icon-${index}`);
+        if (detailDiv.style.display === "block") {
+            detailDiv.style.display = "none";
+            iconSpan.style.transform = "rotate(0deg)";
+        } else {
+            detailDiv.style.display = "block";
+            iconSpan.style.transform = "rotate(180deg)";
+        }
+    }
+
     function updateUI() {
         document.getElementById('peopleList').innerHTML = people.map(p => `<span class="item-card" style="margin:0; font-size:14px;">👤 <b>${p.name}</b> ${p.account ? `<br><small style="color:#666">${p.bank}: ${p.account}</small>` : ''}</span>`).join('');
         
@@ -221,24 +243,45 @@
             </div>
         `).join('');
 
-        // SỬA LỖI HIỂN THỊ CHI TIẾT NGƯỜI THAM GIA Ở ĐÂY
-        document.getElementById('expensesList').innerHTML = expenses.map(e => {
+        // TẠO GIAO DIỆN DANH SÁCH KHOẢN CHI (CÓ NÚT ẤN XEM CHI TIẾT)
+        document.getElementById('expensesList').innerHTML = expenses.map((e, idx) => {
             let badgeHtml = '';
             if (e.mode === 'mixed') badgeHtml = '<div class="badge badge-mixed">Riêng+Dư</div>';
             else if (e.mode === 'exact') badgeHtml = '<div class="badge badge-exact">Tính riêng</div>';
             else badgeHtml = '<div class="badge badge-exact" style="background:#e8f4f8; color:#2c3e50;">Chia chung</div>';
 
-            // Lấy danh sách tên những người tham gia
-            let involvedNames = e.involved.map(i => i.name).join(', ');
+            // Tạo danh sách chi tiết số tiền từng người phải chịu
+            let detailsHtml = e.involved.map(i => {
+                // Đảm bảo tương thích với dữ liệu cũ nếu trước đó chưa lưu biến owed
+                let owedAmount = i.owed;
+                if (owedAmount === undefined) {
+                    let tW = e.involved.reduce((sum, item) => sum + (item.weight || 0), 0);
+                    owedAmount = (e.amount / tW) * (i.weight || 0);
+                }
+                return `
+                <div class="detail-row">
+                    <span>👤 ${i.name}</span>
+                    <b>${Math.round(owedAmount).toLocaleString('vi-VN')}đ</b>
+                </div>`;
+            }).join('');
 
             return `
             <div class="item-card">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
-                    <div><b>${e.desc}</b>: <span style="color:#e74c3c; font-weight:bold;">${e.amount.toLocaleString('vi-VN')}đ</span></div>
-                    ${badgeHtml}
+                <div class="expense-header" onclick="toggleDetails(${idx})" title="Ấn vào để xem chi tiết">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div><b>${e.desc}</b>: <span style="color:#e74c3c; font-weight:bold; font-size:16px;">${e.amount.toLocaleString('vi-VN')}đ</span></div>
+                        ${badgeHtml}
+                    </div>
+                    <div style="color:#666; font-size: 0.9em; margin-top: 8px;">
+                        👉 <b>${e.payer}</b> trả cho <b>${e.involved.length} người</b> 
+                        <span id="icon-${idx}" class="toggle-icon" style="margin-left: 5px;">▼</span>
+                    </div>
                 </div>
-                <div style="color:#666; font-size: 0.9em; margin-top: 8px;">
-                    👉 <b>${e.payer}</b> trả cho <b>${e.involved.length} người</b>: <span style="color:#888;">${involvedNames}</span>
+                
+                <div id="detail-${idx}" class="expense-details">
+                    <div style="margin-bottom: 8px; color: #666; font-style: italic; font-size: 13px;">Bảng chia tiền:</div>
+                    ${detailsHtml}
+                    ${e.mode === 'mixed' ? `<div style="margin-top: 8px; font-size: 12px; color: #d35400;">*Số tiền trên đã cộng gộp cả tiền riêng và tiền dùng chung</div>` : ''}
                 </div>
             </div>`;
         }).join('');
@@ -290,7 +333,14 @@
         let bal = {}; people.forEach(p => bal[p.name] = 0);
         expenses.forEach(e => {
             bal[e.payer] += e.amount;
-            e.involved.forEach(i => bal[i.name] -= i.owed);
+            e.involved.forEach(i => {
+                let owedAmount = i.owed;
+                if (owedAmount === undefined) {
+                    let tW = e.involved.reduce((sum, item) => sum + (item.weight || 0), 0);
+                    owedAmount = (e.amount / tW) * (i.weight || 0);
+                }
+                bal[i.name] -= owedAmount;
+            });
         });
 
         let d = [], c = [];
