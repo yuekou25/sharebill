@@ -21,11 +21,13 @@
         .involved-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
         .involved-row { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 8px 12px; border: 1px solid #eee; border-radius: 6px; }
         .involved-row input[type="number"] { width: 60px; margin: 0; padding: 5px; text-align: center; }
-        /* Mở rộng ô nhập tiền để có chỗ gõ phép tính dài */
         .involved-row input[type="text"] { width: 160px; margin: 0; padding: 5px; text-align: right; }
         
         .result-item { background: #d4edda; color: #155724; padding: 12px; margin-bottom: 8px; border-radius: 6px; font-weight: bold; border-left: 5px solid #28a745; }
         .btn-copy { background-color: #8e44ad; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-top: 5px;}
+        .badge-exact { background-color: #e8f4f8; color: #2980b9; border: 1px solid #bce8f1;}
+        .badge-mixed { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba;}
     </style>
 </head>
 <body>
@@ -43,7 +45,7 @@
 
     <div class="section">
         <h2>2. Thêm chi phí</h2>
-        <input type="text" id="billDesc" placeholder="Tên khoản chi (VD: Cơm trưa, Lẩu...)">
+        <input type="text" id="billDesc" placeholder="Tên khoản chi (VD: Lẩu & Nước, Cơm tấm...)">
         
         <label><b>Ai đã trả tiền?</b></label>
         <select id="payerSelect"></select>
@@ -55,7 +57,10 @@
         </select>
 
         <div id="amountContainer">
-            <input type="text" id="billAmount" placeholder="Tổng tiền (VD: 150k + 200k)" oninput="formatMathInput(this)" onblur="applyMathEval(this)">
+            <input type="text" id="billAmount" id="billAmount" placeholder="Tổng bill (để trống nếu muốn máy tự cộng)" oninput="formatMathInput(this)" onblur="applyMathEval(this)">
+            <div id="sharedNote" style="font-size: 13px; color: #d35400; display: none; margin-top: -5px; margin-bottom: 10px;">
+                💡 <b>Mẹo:</b> Nhập Tổng Bill vào đây. Số tiền dư (Tổng Bill trừ đi tiền riêng của từng người) sẽ tự động chia đều làm khoản dùng chung!
+            </div>
         </div>
 
         <label style="display:block; margin-top: 10px;"><b>Chi tiết cho từng người:</b></label>
@@ -94,26 +99,18 @@
         }
     }
 
-    // --- CÁC HÀM XỬ LÝ TOÁN HỌC MINI ---
     function formatMathInput(input) {
-        // Chỉ cho phép nhập số, dấu chấm, phẩy, cộng, trừ, chữ k (hoặc K), và khoảng trắng
         input.value = input.value.replace(/[^0-9.,+\- kK]/g, '');
     }
 
     function parseMathExpression(str) {
         if (!str) return 0;
-        // Xóa dấu chấm/phẩy ngăn cách hàng nghìn cũ
         str = str.replace(/[.,]/g, '');
-        // Thay chữ k hoặc K bằng 3 số 0 (nghìn)
         str = str.replace(/[kK]/g, '000');
-        // Xóa tất cả các ký tự lạ, chỉ giữ lại số và dấu +, -
         str = str.replace(/[^0-9+\-]/g, '');
-        
-        // Tách chuỗi thành các phần tử để cộng trừ an toàn
         let tokens = str.split(/([+\-])/); 
         let total = 0;
         let currentOp = '+';
-        
         for (let token of tokens) {
             if (token === '+' || token === '-') {
                 currentOp = token;
@@ -129,11 +126,9 @@
     }
 
     function applyMathEval(input) {
-        // Khi người dùng click chuột ra ngoài ô nhập, tự động tính tổng và format lại
         let val = parseMathExpression(input.value);
         input.value = val ? val.toLocaleString('vi-VN') : '';
     }
-    // ------------------------------------
 
     function addPerson() {
         let name = document.getElementById('personName').value.trim();
@@ -151,28 +146,67 @@
         let mode = document.getElementById('splitMode').value;
         let amount = 0;
         let involved = [];
+        
+        let explicitTotal = parseMathExpression(document.getElementById('billAmount').value);
 
         if (mode === 'exact') {
+            let sumExact = 0;
+            let checkedCount = 0;
+
+            // Vòng 1: Tính tổng tiền riêng của mọi người
             document.querySelectorAll('.involved-row').forEach(row => {
                 let cb = row.querySelector('.involve-cb');
-                let exactInput = row.querySelector('.exact-input').value;
-                let money = parseMathExpression(exactInput);
-                
-                if (cb.checked && money > 0) {
-                    involved.push({ name: cb.value, amountOwed: money });
-                    amount += money;
+                if (cb.checked) {
+                    checkedCount++;
+                    let exactInput = row.querySelector('.exact-input').value;
+                    sumExact += parseMathExpression(exactInput);
                 }
             });
-            if (amount === 0) {
-                alert("Vui lòng nhập số tiền hợp lệ cho ít nhất 1 người!");
-                return;
+
+            if (checkedCount === 0) {
+                alert("Vui lòng chọn ít nhất 1 người tham gia!"); return;
             }
+
+            // Xử lý khoản dùng chung nếu có nhập Tổng Bill
+            let hasSharedRemainder = false;
+            let sharedPerPerson = 0;
+
+            if (explicitTotal > sumExact) {
+                hasSharedRemainder = true;
+                amount = explicitTotal;
+                sharedPerPerson = (explicitTotal - sumExact) / checkedCount;
+            } else {
+                amount = sumExact;
+            }
+
+            if (amount === 0) {
+                alert("Vui lòng nhập tiền riêng hoặc tổng bill!"); return;
+            }
+
+            // Vòng 2: Ghi nợ từng người (Cộng thêm phần tiền dùng chung nếu có)
+            document.querySelectorAll('.involved-row').forEach(row => {
+                let cb = row.querySelector('.involve-cb');
+                if (cb.checked) {
+                    let exactInput = row.querySelector('.exact-input').value;
+                    let money = parseMathExpression(exactInput);
+                    
+                    let finalOwed = money + sharedPerPerson;
+                    let detailText = hasSharedRemainder ? `(Riêng ${money.toLocaleString('vi-VN')}đ + Chung ${Math.round(sharedPerPerson).toLocaleString('vi-VN')}đ)` : `(${money.toLocaleString('vi-VN')}đ)`;
+                    
+                    if (finalOwed > 0) {
+                        involved.push({ name: cb.value, amountOwed: finalOwed, detail: detailText });
+                    }
+                }
+            });
+            
+            // Cập nhật lại mode để hiển thị nhãn cho đẹp
+            mode = hasSharedRemainder ? 'mixed' : 'exact';
+
         } else {
-            let amountStr = document.getElementById('billAmount').value;
-            amount = parseMathExpression(amountStr);
+            // Chế độ chia đều / Theo suất (Giữ nguyên)
+            amount = explicitTotal;
             if (!amount || amount <= 0) {
-                alert("Vui lòng nhập tổng tiền hợp lệ!");
-                return;
+                alert("Vui lòng nhập tổng tiền hợp lệ!"); return;
             }
             document.querySelectorAll('.involved-row').forEach(row => {
                 let cb = row.querySelector('.involve-cb');
@@ -191,7 +225,7 @@
         expenses.push({ desc, amount, payer, involved, mode });
         
         document.getElementById('billDesc').value = '';
-        if(document.getElementById('billAmount')) document.getElementById('billAmount').value = '';
+        document.getElementById('billAmount').value = '';
         document.querySelectorAll('.exact-input').forEach(input => input.value = '');
         
         saveData();
@@ -207,99 +241,12 @@
         if (people.includes(currentPayer)) payerSelect.value = currentPayer;
 
         let mode = document.getElementById('splitMode') ? document.getElementById('splitMode').value : 'ratio';
-        let amountContainer = document.getElementById('amountContainer');
+        let sharedNote = document.getElementById('sharedNote');
+        let billAmountInput = document.getElementById('billAmount');
 
         if (mode === 'exact') {
-            amountContainer.style.display = 'none';
-            // Thêm oninput và onblur để gọi máy tính mini
+            sharedNote.style.display = 'block';
+            billAmountInput.placeholder = "Tổng bill (Không bắt buộc)";
             document.getElementById('involvedRows').innerHTML = people.map(p => `
                 <div class="involved-row">
-                    <label><input type="checkbox" class="involve-cb" value="${p}" checked> ${p}</label>
-                    <div>Tiền: <input type="text" class="exact-input" placeholder="VD: 30k + 15k" oninput="formatMathInput(this)" onblur="applyMathEval(this)"></div>
-                </div>
-            `).join('');
-        } else {
-            amountContainer.style.display = 'block';
-            document.getElementById('involvedRows').innerHTML = people.map(p => `
-                <div class="involved-row">
-                    <label><input type="checkbox" class="involve-cb" value="${p}" checked> ${p}</label>
-                    <div>Số suất: <input type="number" class="weight-input" value="1" min="0.1" step="0.1"></div>
-                </div>
-            `).join('');
-        }
-
-        document.getElementById('expensesList').innerHTML = expenses.map((e, idx) => `
-            <div class="list-item">
-                🧾 <b>${e.desc}</b>: ${e.amount.toLocaleString('vi-VN')}đ <br>
-                <span style="color:#555; font-size: 0.9em;">
-                    👉 <b>${e.payer}</b> đã trả ${e.mode === 'exact' ? '(Tính riêng từng người)' : '(Chia chung)'}
-                </span>
-            </div>
-        `).join('');
-    }
-
-    let finalResultText = "";
-
-    function calculateDebts() {
-        if (expenses.length === 0) return;
-        let balances = {};
-        people.forEach(p => balances[p] = 0);
-
-        expenses.forEach(exp => {
-            balances[exp.payer] += exp.amount;
-            
-            if (exp.mode === 'exact') {
-                exp.involved.forEach(item => {
-                    balances[item.name] -= item.amountOwed;
-                });
-            } else {
-                let totalWeights = exp.involved.reduce((sum, item) => sum + item.weight, 0);
-                let pricePerWeight = exp.amount / totalWeights;
-                exp.involved.forEach(item => {
-                    balances[item.name] -= pricePerWeight * item.weight;
-                });
-            }
-        });
-
-        let debtors = [], creditors = [];
-        for (let p in balances) {
-            let bal = Math.round(balances[p]);
-            if (bal < 0) debtors.push({ name: p, amount: -bal });
-            else if (bal > 0) creditors.push({ name: p, amount: bal });
-        }
-
-        debtors.sort((a, b) => b.amount - a.amount);
-        creditors.sort((a, b) => b.amount - a.amount);
-
-        let results = [];
-        finalResultText = "💸 TỔNG KẾT CHI PHÍ\n------------------\n";
-        
-        let i = 0, j = 0;
-        while (i < debtors.length && j < creditors.length) {
-            let d = debtors[i], c = creditors[j];
-            let settle = Math.min(d.amount, c.amount);
-            
-            let line = `👉 ${d.name} chuyển cho ${c.name}: ${settle.toLocaleString('vi-VN')}đ`;
-            results.push(`<div class="result-item">${line}</div>`);
-            finalResultText += line + "\n";
-            
-            d.amount -= settle; 
-            c.amount -= settle;
-            
-            if (d.amount === 0) i++; 
-            if (c.amount === 0) j++;
-        }
-
-        document.getElementById('resultBox').innerHTML = results.length ? results.join('') : "🎉 Tuyệt vời! Đã bù trừ xong, không ai nợ ai đồng nào!";
-        document.getElementById('btnCopy').style.display = results.length ? 'block' : 'none';
-    }
-
-    function copyResultToClipboard() {
-        navigator.clipboard.writeText(finalResultText).then(() => {
-            alert("Đã copy kết quả thành công! Bạn có thể dán vào tin nhắn để gửi cho nhóm.");
-        });
-    }
-</script>
-
-</body>
-</html>
+                    <label><input type="checkbox" class
