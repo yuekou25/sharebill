@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Share Bill Ultimate - QR & Statistics</title>
+    <title>Share Bill Ultimate - QR & Biểu Đồ</title>
     <style>
         :root { --primary: #2980b9; --secondary: #27ae60; --danger: #e74c3c; --purple: #8e44ad; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #333; line-height: 1.5; }
@@ -27,14 +27,15 @@
         .flex-inputs { display: flex; gap: 10px; }
         .flex-inputs input { width: 100px; margin: 0; }
 
-        .qr-box { text-align: center; margin-top: 10px; padding: 10px; border: 1px solid #eee; border-radius: 8px; background: #fff; }
-        .qr-img { max-width: 180px; border-radius: 8px; }
+        .qr-box { text-align: center; margin-top: 10px; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; }
+        .qr-img { max-width: 180px; border-radius: 8px; margin-top: 5px; }
         
-        .receipt-view { display: none; background: #fff; padding: 30px; border: 1px solid #ccc; font-family: 'Courier New', Courier, monospace; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .receipt-view { display: none; background: #fff; padding: 30px; border: 1px solid #ccc; font-family: 'Courier New', Courier, monospace; box-shadow: 0 0 20px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
         .receipt-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
         
-        .stats-box { background: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; }
-        .stat-line { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dotted #d1d5db; }
+        .stats-box { background: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 10px; margin-top: 20px; display: none; }
+        .stat-bar-container { width: 100%; background: #e2e8f0; border-radius: 6px; height: 10px; margin-top: 5px; overflow: hidden; }
+        .stat-bar { height: 100%; border-radius: 6px; transition: width 0.5s ease-in-out; }
     </style>
 </head>
 <body>
@@ -46,9 +47,9 @@
         <h2>👥 Thành viên</h2>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <input type="text" id="personName" placeholder="Tên (Bắt buộc)">
-            <input type="text" id="personBank" placeholder="Ngân hàng (Không bắt buộc)">
+            <input type="text" id="personBank" placeholder="Tên Ngân hàng (VD: VCB, MB...)">
         </div>
-        <input type="text" id="personAcc" placeholder="Số tài khoản (Không bắt buộc)">
+        <input type="text" id="personAcc" placeholder="Số tài khoản / Nickname (VD: 123456 hoặc an123)">
         <button class="btn-blue" onclick="addPerson()">+ Thêm Thành Viên</button>
         <div id="peopleList" class="list-box" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
         <button class="btn-red" onclick="clearAllData()">🗑 Xóa tất cả dữ liệu</button>
@@ -75,8 +76,8 @@
         <button class="btn-green" onclick="addExpense()">+ Thêm Khoản Chi</button>
         <div id="expensesList" class="list-box"></div>
         
-        <label style="cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: bold;">
-            <input type="checkbox" id="showStatsToggle" onchange="toggleStats()" style="width: 20px;"> Hiện thống kê chi tiêu
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: bold; margin-top: 15px; padding: 10px; background: #e8f4f8; border-radius: 8px;">
+            <input type="checkbox" id="showStatsToggle" onchange="toggleStats()" style="width: 20px; height: 20px; margin: 0;"> 📊 Hiển thị Biểu đồ Thống kê
         </label>
         <div id="statsBox" class="stats-box"></div>
     </div>
@@ -85,8 +86,8 @@
         <button class="btn-purple" onclick="calculateDebts()">🧮 TÍNH TOÁN & CHỐT SỔ</button>
         <div id="resultBox" style="margin-top: 20px;"></div>
         <div id="exportButtons" style="display: none; gap: 10px;">
-            <button class="btn-blue" onclick="copyResultText()">📋 Sao chép văn bản</button>
-            <button class="btn-green" onclick="showReceipt()">🖼 Xem hóa đơn ảnh</button>
+            <button class="btn-blue" onclick="copyResultText()">📋 Sao chép văn bản (Zalo/Mess)</button>
+            <button class="btn-green" onclick="showReceipt()">🖼 Xem Hóa đơn để chụp ảnh</button>
         </div>
     </div>
 </div>
@@ -94,16 +95,24 @@
 <div id="receiptSection" class="receipt-view">
     <div class="receipt-header">
         <h2 style="margin:0">HÓA ĐƠN CHI TIÊU</h2>
-        <p id="receiptDate"></p>
+        <p id="receiptDate" style="margin: 5px 0; font-size: 14px; color: #666;"></p>
     </div>
     <div id="receiptContent"></div>
-    <p style="text-align: center; margin-top: 30px;">--- Cảm ơn bạn ---</p>
-    <button class="btn-red" onclick="hideReceipt()">Quay lại ứng dụng</button>
+    <p style="text-align: center; margin-top: 30px; font-weight: bold;">--- CẢM ƠN BẠN ---</p>
+    <button class="btn-red" style="margin-top: 20px;" onclick="hideReceipt()">Quay lại ứng dụng</button>
 </div>
 
 <script>
-    let people = JSON.parse(localStorage.getItem('ultimate_people')) || [];
-    let expenses = JSON.parse(localStorage.getItem('ultimate_expenses')) || [];
+    let people = [];
+    let expenses = [];
+
+    // Nạp dữ liệu an toàn
+    try {
+        let savedPeople = localStorage.getItem('ultimate_people');
+        if (savedPeople) people = JSON.parse(savedPeople);
+        let savedExpenses = localStorage.getItem('ultimate_expenses');
+        if (savedExpenses) expenses = JSON.parse(savedExpenses);
+    } catch (e) { localStorage.clear(); }
 
     window.onload = () => updateUI();
 
@@ -143,6 +152,8 @@
             document.getElementById('personBank').value = '';
             document.getElementById('personAcc').value = '';
             saveData(); updateUI();
+        } else if (!n) {
+            alert("Vui lòng nhập tên!");
         }
     }
 
@@ -183,14 +194,15 @@
                 if (cb.checked) involved.push({ name: cb.value, owed: (totalBill / tW) * parseFloat(row.querySelector('.weight-input').value) });
             });
         }
-        if (!payer || involved.length === 0) { alert("Thiếu thông tin!"); return; }
+        if (!payer || involved.length === 0) { alert("Thiếu thông tin người trả hoặc người tham gia!"); return; }
         expenses.push({ desc, amount: totalBill, payer, involved, mode });
         saveData(); updateUI();
         document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = '';
     }
 
     function updateUI() {
-        document.getElementById('peopleList').innerHTML = people.map(p => `<span class="item-card" style="margin:0">👤 ${p.name}</span>`).join('');
+        document.getElementById('peopleList').innerHTML = people.map(p => `<span class="item-card" style="margin:0; font-size:14px;">👤 <b>${p.name}</b> ${p.account ? `<br><small style="color:#666">${p.bank}: ${p.account}</small>` : ''}</span>`).join('');
+        
         let ps = document.getElementById('payerSelect');
         let cur = ps.value;
         ps.innerHTML = '<option value="">-- Người trả --</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
@@ -199,32 +211,60 @@
         let mode = document.getElementById('splitMode').value;
         document.getElementById('involvedRows').innerHTML = people.map(p => `
             <div class="involved-row">
-                <label><input type="checkbox" class="involve-cb" value="${p.name}" checked> ${p.name}</label>
+                <label><input type="checkbox" class="involve-cb" value="${p.name}" checked> <b>${p.name}</b></label>
                 <div class="flex-inputs">
-                    ${mode === 'exact' ? `Tiền: <input type="text" class="exact-input" onblur="applyMathEval(this)">` : `Suất: <input type="number" class="weight-input" value="1" step="0.1">`}
+                    ${mode === 'exact' ? `Tiền: <input type="text" class="exact-input" placeholder="VD: 30k" onblur="applyMathEval(this)">` : `Suất: <input type="number" class="weight-input" value="1" step="0.1">`}
                 </div>
             </div>
         `).join('');
 
         document.getElementById('expensesList').innerHTML = expenses.map(e => `
-            <div class="item-card"><b>${e.desc}</b>: ${e.amount.toLocaleString('vi-VN')}đ <br> <small>👉 ${e.payer} trả</small></div>
+            <div class="item-card"><b>${e.desc}</b>: <span style="color:#e74c3c; font-weight:bold;">${e.amount.toLocaleString('vi-VN')}đ</span> <br> <small style="color:#666;">👉 <b>${e.payer}</b> trả</small></div>
         `).join('');
         
         if (document.getElementById('showStatsToggle').checked) toggleStats();
     }
 
+    // 📊 TÍNH NĂNG BIỂU ĐỒ THỐNG KÊ
     function toggleStats() {
         let box = document.getElementById('statsBox');
         if (!document.getElementById('showStatsToggle').checked) { box.style.display = 'none'; return; }
+        
         box.style.display = 'block';
         let s = {};
-        expenses.forEach(e => { s[e.desc] = (s[e.desc] || 0) + e.amount; });
-        box.innerHTML = '<h4>📊 Thống kê theo khoản chi:</h4>' + Object.keys(s).map(k => `
-            <div class="stat-line"><span>${k}</span><b>${s[k].toLocaleString('vi-VN')}đ</b></div>
-        `).join('');
+        let total = 0;
+        expenses.forEach(e => { s[e.desc] = (s[e.desc] || 0) + e.amount; total += e.amount; });
+
+        if (total === 0) {
+            box.innerHTML = '<p style="text-align:center; color:#666;">Chưa có dữ liệu để thống kê.</p>';
+            return;
+        }
+
+        let colors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6', '#e67e22', '#1abc9c'];
+        let html = `<h3 style="margin-top:0; color:#b45309;">📊 Tổng Chi Tiêu: ${total.toLocaleString('vi-VN')}đ</h3>`;
+        
+        let i = 0;
+        for (let k in s) {
+            let pct = (s[k] / total * 100).toFixed(1);
+            let color = colors[i % colors.length];
+            html += `
+                <div style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 4px;">
+                        <b>${k}</b> <span>${s[k].toLocaleString('vi-VN')}đ (<b style="color:${color}">${pct}%</b>)</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: ${pct}%; background-color: ${color};"></div>
+                    </div>
+                </div>
+            `;
+            i++;
+        }
+        box.innerHTML = html;
     }
 
     let reportText = "";
+    let receiptTransferHtml = "";
+
     function calculateDebts() {
         if (!expenses.length) return;
         let bal = {}; people.forEach(p => bal[p.name] = 0);
@@ -242,40 +282,79 @@
 
         let res = [], i = 0, j = 0;
         reportText = "💸 TỔNG KẾT CHI PHÍ\n------------------\n";
+        receiptTransferHtml = "";
+
         while (i < d.length && j < c.length) {
             let amount = Math.min(d[i].a, c[j].a);
             let creditor = people.find(p => p.name === c[j].n);
-            let qrUrl = (creditor && creditor.bank && creditor.account) ? `https://img.vietqr.io/image/${creditor.bank}-${creditor.account}-compact2.jpg?amount=${amount}&addInfo=Tra_tien_bill` : null;
             
-            let line = `👉 ${d[i].n} chuyển cho ${c[j].n}: ${amount.toLocaleString('vi-VN')}đ`;
+            // Xử lý thông tin Ngân hàng và STK
+            let hasBank = creditor && creditor.bank && creditor.account;
+            let bankInfoText = hasBank ? ` (NH: ${creditor.bank}, STK: ${creditor.account})` : '';
+            let qrUrl = hasBank ? `https://img.vietqr.io/image/${creditor.bank}-${creditor.account}-compact2.jpg?amount=${amount}&addInfo=Tra_tien_bill` : null;
+            
+            // 1. Dòng văn bản để Copy
+            let lineText = `👉 ${d[i].n} chuyển cho ${c[j].n}: ${amount.toLocaleString('vi-VN')}đ${bankInfoText}`;
+            reportText += lineText + "\n";
+
+            // 2. Giao diện Web
             res.push(`
                 <div class="result-item">
-                    ${line}
-                    ${qrUrl ? `<div class="qr-box"><p><small>Quét mã để trả nợ cho ${c[j].n}:</small></p><img src="${qrUrl}" class="qr-img"></div>` : ''}
+                    <b>${d[i].n}</b> chuyển cho <b>${c[j].n}</b>: <span style="color:#d32f2f; font-weight:bold;">${amount.toLocaleString('vi-VN')}đ</span>
+                    ${hasBank ? `<br><small style="color:#555;">🏦 ${creditor.bank} - STK: <b>${creditor.account}</b></small>` : ''}
+                    ${qrUrl ? `<div class="qr-box"><p style="margin:0 0 5px 0;"><small>Quét mã để trả nợ cho ${c[j].n}:</small></p><img src="${qrUrl}" class="qr-img"></div>` : ''}
                 </div>`);
-            reportText += line + "\n";
+
+            // 3. Giao diện Hóa đơn Ảnh
+            receiptTransferHtml += `
+                <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #ccc; text-align: center;">
+                    <div style="font-size: 16px; margin-bottom: 5px;"><b>${d[i].n}</b> ➡️ <b>${c[j].n}</b></div>
+                    <div style="font-size: 20px; font-weight: bold;">${amount.toLocaleString('vi-VN')}đ</div>
+                    ${hasBank ? `<div style="font-size: 14px; margin-top: 5px;">NH: ${creditor.bank} - STK: ${creditor.account}</div>` : ''}
+                    ${qrUrl ? `<img src="${qrUrl}" style="max-width: 160px; margin-top: 15px; border-radius: 8px;">` : ''}
+                </div>
+            `;
+
             d[i].a -= amount; c[j].a -= amount;
             if (d[i].a === 0) i++; if (c[j].a === 0) j++;
         }
-        document.getElementById('resultBox').innerHTML = res.join('') || "🎉 Đã xong, không ai nợ ai!";
+        document.getElementById('resultBox').innerHTML = res.join('') || "<div class='result-item'>🎉 Tuyệt vời! Đã bù trừ xong, không ai nợ ai!</div>";
         document.getElementById('exportButtons').style.display = 'flex';
     }
 
     function copyResultText() {
-        navigator.clipboard.writeText(reportText).then(() => alert("Đã copy văn bản!"));
+        navigator.clipboard.writeText(reportText).then(() => alert("Đã copy văn bản kèm STK thành công!"));
     }
 
     function showReceipt() {
         document.getElementById('mainApp').style.display = 'none';
         let rec = document.getElementById('receiptSection');
         rec.style.display = 'block';
-        document.getElementById('receiptDate').innerText = new Date().toLocaleString();
+        
+        let d = new Date();
+        document.getElementById('receiptDate').innerText = `Ngày in: ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
+        
+        let totalAll = expenses.reduce((s, e) => s + e.amount, 0);
+        
         document.getElementById('receiptContent').innerHTML = `
-            <h4>CÁC KHOẢN CHI:</h4>
-            ${expenses.map(e => `<div class="stat-line"><span>${e.desc}</span><span>${e.amount.toLocaleString('vi-VN')}đ</span></div>`).join('')}
-            <h4 style="margin-top:20px">KẾT QUẢ CHUYỂN KHOẢN:</h4>
-            ${reportText.replace(/\n/g, '<br>')}
+            <div style="margin-bottom: 30px;">
+                <h4 style="margin-bottom: 10px; text-decoration: underline;">1. CÁC KHOẢN CHI:</h4>
+                ${expenses.map(e => `
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+                        <span>- ${e.desc}</span><b>${e.amount.toLocaleString('vi-VN')}đ</b>
+                    </div>
+                `).join('')}
+                <div style="display: flex; justify-content: space-between; padding-top: 10px; margin-top: 10px; border-top: 2px solid #000; font-weight: bold; font-size: 18px;">
+                    <span>TỔNG CỘNG:</span><span>${totalAll.toLocaleString('vi-VN')}đ</span>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="margin-bottom: 15px; text-decoration: underline;">2. CHUYỂN KHOẢN:</h4>
+                ${receiptTransferHtml}
+            </div>
         `;
+        window.scrollTo(0, 0); // Cuộn lên đầu trang
     }
 
     function hideReceipt() {
