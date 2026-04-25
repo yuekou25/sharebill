@@ -21,7 +21,8 @@
         .involved-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
         .involved-row { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 8px 12px; border: 1px solid #eee; border-radius: 6px; }
         .involved-row input[type="number"] { width: 60px; margin: 0; padding: 5px; text-align: center; }
-        .involved-row input[type="text"] { width: 110px; margin: 0; padding: 5px; text-align: right; }
+        /* Mở rộng ô nhập tiền để có chỗ gõ phép tính dài */
+        .involved-row input[type="text"] { width: 160px; margin: 0; padding: 5px; text-align: right; }
         
         .result-item { background: #d4edda; color: #155724; padding: 12px; margin-bottom: 8px; border-radius: 6px; font-weight: bold; border-left: 5px solid #28a745; }
         .btn-copy { background-color: #8e44ad; }
@@ -54,7 +55,7 @@
         </select>
 
         <div id="amountContainer">
-            <input type="text" id="billAmount" placeholder="Nhập Tổng tiền bill (VND)" oninput="formatCurrency(this)">
+            <input type="text" id="billAmount" placeholder="Tổng tiền (VD: 150k + 200k)" oninput="formatMathInput(this)" onblur="applyMathEval(this)">
         </div>
 
         <label style="display:block; margin-top: 10px;"><b>Chi tiết cho từng người:</b></label>
@@ -93,10 +94,46 @@
         }
     }
 
-    function formatCurrency(input) {
-        let value = input.value.replace(/\D/g, '');
-        input.value = value ? parseInt(value).toLocaleString('vi-VN') : '';
+    // --- CÁC HÀM XỬ LÝ TOÁN HỌC MINI ---
+    function formatMathInput(input) {
+        // Chỉ cho phép nhập số, dấu chấm, phẩy, cộng, trừ, chữ k (hoặc K), và khoảng trắng
+        input.value = input.value.replace(/[^0-9.,+\- kK]/g, '');
     }
+
+    function parseMathExpression(str) {
+        if (!str) return 0;
+        // Xóa dấu chấm/phẩy ngăn cách hàng nghìn cũ
+        str = str.replace(/[.,]/g, '');
+        // Thay chữ k hoặc K bằng 3 số 0 (nghìn)
+        str = str.replace(/[kK]/g, '000');
+        // Xóa tất cả các ký tự lạ, chỉ giữ lại số và dấu +, -
+        str = str.replace(/[^0-9+\-]/g, '');
+        
+        // Tách chuỗi thành các phần tử để cộng trừ an toàn
+        let tokens = str.split(/([+\-])/); 
+        let total = 0;
+        let currentOp = '+';
+        
+        for (let token of tokens) {
+            if (token === '+' || token === '-') {
+                currentOp = token;
+            } else if (token !== '') {
+                let num = parseFloat(token);
+                if (!isNaN(num)) {
+                    if (currentOp === '+') total += num;
+                    if (currentOp === '-') total -= num;
+                }
+            }
+        }
+        return total;
+    }
+
+    function applyMathEval(input) {
+        // Khi người dùng click chuột ra ngoài ô nhập, tự động tính tổng và format lại
+        let val = parseMathExpression(input.value);
+        input.value = val ? val.toLocaleString('vi-VN') : '';
+    }
+    // ------------------------------------
 
     function addPerson() {
         let name = document.getElementById('personName').value.trim();
@@ -116,11 +153,11 @@
         let involved = [];
 
         if (mode === 'exact') {
-            // Chế độ nhập tiền chính xác: Tự cộng dồn tổng tiền
             document.querySelectorAll('.involved-row').forEach(row => {
                 let cb = row.querySelector('.involve-cb');
-                let exactInput = row.querySelector('.exact-input').value.replace(/\D/g, '');
-                let money = parseFloat(exactInput) || 0;
+                let exactInput = row.querySelector('.exact-input').value;
+                let money = parseMathExpression(exactInput);
+                
                 if (cb.checked && money > 0) {
                     involved.push({ name: cb.value, amountOwed: money });
                     amount += money;
@@ -131,9 +168,8 @@
                 return;
             }
         } else {
-            // Chế độ chia theo suất: Lấy tổng tiền từ ô nhập
-            let amountStr = document.getElementById('billAmount').value.replace(/\D/g, '');
-            amount = parseFloat(amountStr);
+            let amountStr = document.getElementById('billAmount').value;
+            amount = parseMathExpression(amountStr);
             if (!amount || amount <= 0) {
                 alert("Vui lòng nhập tổng tiền hợp lệ!");
                 return;
@@ -154,11 +190,8 @@
 
         expenses.push({ desc, amount, payer, involved, mode });
         
-        // Reset form
         document.getElementById('billDesc').value = '';
         if(document.getElementById('billAmount')) document.getElementById('billAmount').value = '';
-        
-        // Reset các ô nhập tiền chi tiết
         document.querySelectorAll('.exact-input').forEach(input => input.value = '');
         
         saveData();
@@ -166,29 +199,27 @@
     }
 
     function updateUI() {
-        // Cập nhật danh sách người
         document.getElementById('peopleList').innerHTML = people.map(p => `<span class="list-item" style="display:inline-block; margin-right:5px;">👤 ${p}</span>`).join('');
         
-        // Cập nhật Dropdown người trả
         let payerSelect = document.getElementById('payerSelect');
         let currentPayer = payerSelect.value;
         payerSelect.innerHTML = '<option value="">-- Chọn người trả --</option>' + people.map(p => `<option value="${p}">${p}</option>`).join('');
         if (people.includes(currentPayer)) payerSelect.value = currentPayer;
 
-        // Xử lý giao diện Cách chia tiền
         let mode = document.getElementById('splitMode') ? document.getElementById('splitMode').value : 'ratio';
         let amountContainer = document.getElementById('amountContainer');
 
         if (mode === 'exact') {
-            amountContainer.style.display = 'none'; // Ẩn ô nhập tổng tiền
+            amountContainer.style.display = 'none';
+            // Thêm oninput và onblur để gọi máy tính mini
             document.getElementById('involvedRows').innerHTML = people.map(p => `
                 <div class="involved-row">
                     <label><input type="checkbox" class="involve-cb" value="${p}" checked> ${p}</label>
-                    <div>Tiền (VNĐ): <input type="text" class="exact-input" placeholder="VD: 30000" oninput="formatCurrency(this)"></div>
+                    <div>Tiền: <input type="text" class="exact-input" placeholder="VD: 30k + 15k" oninput="formatMathInput(this)" onblur="applyMathEval(this)"></div>
                 </div>
             `).join('');
         } else {
-            amountContainer.style.display = 'block'; // Hiện ô nhập tổng tiền
+            amountContainer.style.display = 'block';
             document.getElementById('involvedRows').innerHTML = people.map(p => `
                 <div class="involved-row">
                     <label><input type="checkbox" class="involve-cb" value="${p}" checked> ${p}</label>
@@ -197,7 +228,6 @@
             `).join('');
         }
 
-        // Cập nhật danh sách khoản chi (Hiển thị rõ người trả tiền)
         document.getElementById('expensesList').innerHTML = expenses.map((e, idx) => `
             <div class="list-item">
                 🧾 <b>${e.desc}</b>: ${e.amount.toLocaleString('vi-VN')}đ <br>
@@ -216,10 +246,8 @@
         people.forEach(p => balances[p] = 0);
 
         expenses.forEach(exp => {
-            // Cộng tiền cho người trả
             balances[exp.payer] += exp.amount;
             
-            // Trừ tiền người nợ tùy theo chế độ
             if (exp.mode === 'exact') {
                 exp.involved.forEach(item => {
                     balances[item.name] -= item.amountOwed;
@@ -233,7 +261,6 @@
             }
         });
 
-        // Phân loại chủ nợ và con nợ
         let debtors = [], creditors = [];
         for (let p in balances) {
             let bal = Math.round(balances[p]);
@@ -241,14 +268,12 @@
             else if (bal > 0) creditors.push({ name: p, amount: bal });
         }
 
-        // Sắp xếp ưu tiên trả khoản lớn trước
         debtors.sort((a, b) => b.amount - a.amount);
         creditors.sort((a, b) => b.amount - a.amount);
 
         let results = [];
         finalResultText = "💸 TỔNG KẾT CHI PHÍ\n------------------\n";
         
-        // Thuật toán bù trừ nợ (Greedy)
         let i = 0, j = 0;
         while (i < debtors.length && j < creditors.length) {
             let d = debtors[i], c = creditors[j];
@@ -272,8 +297,6 @@
     function copyResultToClipboard() {
         navigator.clipboard.writeText(finalResultText).then(() => {
             alert("Đã copy kết quả thành công! Bạn có thể dán vào tin nhắn để gửi cho nhóm.");
-        }).catch(err => {
-            alert("Lỗi sao chép, vui lòng copy thủ công trên màn hình.");
         });
     }
 </script>
