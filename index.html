@@ -3,370 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Share Bill Pro - Tính Nợ Thông Minh</title>
+    <title>Share Bill Ultimate - QR & Statistics</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; line-height: 1.5; }
-        .container { max-width: 650px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1, h2 { text-align: center; color: #2c3e50; margin-top: 0; }
-        .section { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
-        .section:last-child { border-bottom: none; }
-        input[type="text"], input[type="number"], select { width: calc(100% - 24px); padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-        button { width: 100%; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
-        .btn-blue { background-color: #2980b9; }
-        .btn-red { background-color: #e74c3c; margin-top: 5px; }
-        .list-box { background: #f9f9f9; padding: 10px; border-radius: 6px; min-height: 50px; margin-bottom: 15px; }
-        .list-item { background: #fff; padding: 12px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 15px; }
+        :root { --primary: #2980b9; --secondary: #27ae60; --danger: #e74c3c; --purple: #8e44ad; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #333; line-height: 1.5; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h1, h2 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
+        .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px dashed #eee; }
+        input, select, textarea { width: calc(100% - 24px); padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
+        .btn-blue { background-color: var(--primary); }
+        .btn-green { background-color: var(--secondary); }
+        .btn-red { background-color: var(--danger); }
+        .btn-purple { background-color: var(--purple); }
+        button:hover { filter: brightness(1.1); transform: translateY(-1px); }
         
-        .involved-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
-        .involved-row { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 8px 12px; border: 1px solid #eee; border-radius: 6px; }
-        .involved-row input[type="number"] { width: 60px; margin: 0; padding: 5px; text-align: center; }
-        .involved-row input[type="text"] { width: 160px; margin: 0; padding: 5px; text-align: right; }
+        .list-box { background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .item-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #edf2f7; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         
-        .result-item { background: #d4edda; color: #155724; padding: 12px; margin-bottom: 8px; border-radius: 6px; font-weight: bold; border-left: 5px solid #28a745; }
-        .btn-copy { background-color: #8e44ad; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-top: 5px;}
-        .badge-exact { background-color: #e8f4f8; color: #2980b9; border: 1px solid #bce8f1;}
-        .badge-mixed { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba;}
+        .involved-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f1f5f9; }
+        .involved-row:last-child { border-bottom: none; }
+        .flex-inputs { display: flex; gap: 10px; }
+        .flex-inputs input { width: 100px; margin: 0; }
+
+        .qr-box { text-align: center; margin-top: 10px; padding: 10px; border: 1px solid #eee; border-radius: 8px; background: #fff; }
+        .qr-img { max-width: 180px; border-radius: 8px; }
+        
+        .receipt-view { display: none; background: #fff; padding: 30px; border: 1px solid #ccc; font-family: 'Courier New', Courier, monospace; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .receipt-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+        
+        .stats-box { background: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; }
+        .stat-line { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dotted #d1d5db; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>💸 Share Bill Pro</h1>
+<div class="container" id="mainApp">
+    <h1>💸 Share Bill Ultimate</h1>
 
     <div class="section">
-        <h2>1. Nhóm của bạn</h2>
-        <input type="text" id="personName" placeholder="Tên thành viên mới...">
-        <button class="btn-blue" onclick="addPerson()">+ Thêm Người</button>
-        <div id="peopleList" class="list-box"></div>
-        <button class="btn-red" onclick="clearAllData()">🗑 Xóa làm lại từ đầu</button>
+        <h2>👥 Thành viên</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <input type="text" id="personName" placeholder="Tên (Bắt buộc)">
+            <input type="text" id="personBank" placeholder="Ngân hàng (Không bắt buộc)">
+        </div>
+        <input type="text" id="personAcc" placeholder="Số tài khoản (Không bắt buộc)">
+        <button class="btn-blue" onclick="addPerson()">+ Thêm Thành Viên</button>
+        <div id="peopleList" class="list-box" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        <button class="btn-red" onclick="clearAllData()">🗑 Xóa tất cả dữ liệu</button>
     </div>
 
     <div class="section">
-        <h2>2. Thêm chi phí</h2>
-        <input type="text" id="billDesc" placeholder="Tên khoản chi (VD: Lẩu & Nước, Cơm tấm...)">
-        
+        <h2>🧾 Thêm khoản chi</h2>
+        <input type="text" id="billDesc" placeholder="Tên khoản chi (VD: Ăn lẩu, Taxi...)">
         <label><b>Ai đã trả tiền?</b></label>
         <select id="payerSelect"></select>
 
-        <label style="display:block; margin-top: 10px;"><b>Cách chia tiền:</b></label>
-        <select id="splitMode" onchange="updateUI()" style="background-color: #e8f4f8; font-weight: bold; border-color: #3498db;">
-            <option value="ratio">🔄 Chia đều hoặc Theo suất</option>
-            <option value="exact">🎯 Nhập chính xác tiền từng người</option>
+        <label><b>Cách chia:</b></label>
+        <select id="splitMode" onchange="updateUI()">
+            <option value="ratio">🔄 Chia đều / Theo suất</option>
+            <option value="exact">🎯 Nhập tiền riêng (+ Tự động chia dư)</option>
         </select>
 
         <div id="amountContainer">
-            <input type="text" id="billAmount" placeholder="Tổng bill (để trống nếu muốn máy tự cộng)" oninput="formatMathInput(this)" onblur="applyMathEval(this)">
-            <div id="sharedNote" style="font-size: 13px; color: #d35400; display: none; margin-top: -5px; margin-bottom: 10px;">
-                💡 <b>Mẹo:</b> Nhập Tổng Bill vào đây. Số tiền dư sẽ tự động bổ đều làm khoản dùng chung!
-            </div>
+            <input type="text" id="billTotal" placeholder="Tổng tiền Bill (VD: 500k)" oninput="formatMathInput(this)" onblur="applyMathEval(this)">
         </div>
 
-        <label style="display:block; margin-top: 10px;"><b>Chi tiết cho từng người:</b></label>
         <div id="involvedRows" class="involved-list"></div>
 
-        <button class="btn-blue" onclick="addExpense()">+ Thêm Khoản Chi</button>
+        <button class="btn-green" onclick="addExpense()">+ Thêm Khoản Chi</button>
         <div id="expensesList" class="list-box"></div>
+        
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: bold;">
+            <input type="checkbox" id="showStatsToggle" onchange="toggleStats()" style="width: 20px;"> Hiện thống kê chi tiêu
+        </label>
+        <div id="statsBox" class="stats-box"></div>
     </div>
 
     <div class="section">
-        <button onclick="calculateDebts()">🧮 TÍNH TOÁN PHƯƠNG ÁN TỐI ƯU</button>
+        <button class="btn-purple" onclick="calculateDebts()">🧮 TÍNH TOÁN & CHỐT SỔ</button>
         <div id="resultBox" style="margin-top: 20px;"></div>
-        <button id="btnCopy" class="btn-copy" style="display: none;" onclick="copyResultToClipboard()">📋 Sao chép kết quả</button>
+        <div id="exportButtons" style="display: none; gap: 10px;">
+            <button class="btn-blue" onclick="copyResultText()">📋 Sao chép văn bản</button>
+            <button class="btn-green" onclick="showReceipt()">🖼 Xem hóa đơn ảnh</button>
+        </div>
     </div>
 </div>
 
+<div id="receiptSection" class="receipt-view">
+    <div class="receipt-header">
+        <h2 style="margin:0">HÓA ĐƠN CHI TIÊU</h2>
+        <p id="receiptDate"></p>
+    </div>
+    <div id="receiptContent"></div>
+    <p style="text-align: center; margin-top: 30px;">--- Cảm ơn bạn ---</p>
+    <button class="btn-red" onclick="hideReceipt()">Quay lại ứng dụng</button>
+</div>
+
 <script>
-    let people = [];
-    let expenses = [];
+    let people = JSON.parse(localStorage.getItem('ultimate_people')) || [];
+    let expenses = JSON.parse(localStorage.getItem('ultimate_expenses')) || [];
 
-    // TÍNH NĂNG CHỐNG SẬP: Kiểm tra dữ liệu an toàn trước khi nạp
-    try {
-        let savedPeople = localStorage.getItem('sharebill_people');
-        if (savedPeople) people = JSON.parse(savedPeople);
-        if (!Array.isArray(people)) people = [];
-
-        let savedExpenses = localStorage.getItem('sharebill_expenses');
-        if (savedExpenses) expenses = JSON.parse(savedExpenses);
-        if (!Array.isArray(expenses)) expenses = [];
-    } catch (error) {
-        console.warn("Dữ liệu cũ bị lỗi, hệ thống đã reset tự động.");
-        people = [];
-        expenses = [];
-        localStorage.removeItem('sharebill_people');
-        localStorage.removeItem('sharebill_expenses');
-    }
-
-    // Cập nhật giao diện ngay lập tức
-    updateUI();
+    window.onload = () => updateUI();
 
     function saveData() {
-        localStorage.setItem('sharebill_people', JSON.stringify(people));
-        localStorage.setItem('sharebill_expenses', JSON.stringify(expenses));
+        localStorage.setItem('ultimate_people', JSON.stringify(people));
+        localStorage.setItem('ultimate_expenses', JSON.stringify(expenses));
     }
 
     function clearAllData() {
-        if(confirm("Bạn có chắc chắn muốn xóa hết danh sách người và các khoản chi không?")) {
-            localStorage.removeItem('sharebill_people');
-            localStorage.removeItem('sharebill_expenses');
-            people = [];
-            expenses = [];
-            updateUI();
-            document.getElementById('resultBox').innerHTML = '';
-            document.getElementById('btnCopy').style.display = 'none';
-            alert("Đã xóa sạch dữ liệu thành công!");
+        if(confirm("Xóa toàn bộ dữ liệu?")) {
+            localStorage.clear(); people = []; expenses = [];
+            updateUI(); document.getElementById('resultBox').innerHTML = '';
+            document.getElementById('exportButtons').style.display = 'none';
         }
     }
 
-    function formatMathInput(input) {
-        input.value = input.value.replace(/[^0-9.,+\- kK]/g, '');
-    }
-
-    function parseMathExpression(str) {
+    function formatMathInput(i) { i.value = i.value.replace(/[^0-9.,+\- kK]/g, ''); }
+    function parseMath(str) {
         if (!str) return 0;
-        str = str.replace(/[.,]/g, '');
-        str = str.replace(/[kK]/g, '000');
-        str = str.replace(/[^0-9+\-]/g, '');
-        if (!str) return 0;
-        let tokens = str.split(/([+\-])/); 
-        let total = 0;
-        let currentOp = '+';
-        for (let token of tokens) {
-            if (token === '+' || token === '-') {
-                currentOp = token;
-            } else if (token !== '') {
-                let num = parseFloat(token);
-                if (!isNaN(num)) {
-                    if (currentOp === '+') total += num;
-                    if (currentOp === '-') total -= num;
-                }
-            }
+        str = str.replace(/[.,]/g, '').replace(/[kK]/g, '000').replace(/[^0-9+\-]/g, '');
+        let tokens = str.split(/([+\-])/), total = 0, op = '+';
+        for (let t of tokens) {
+            if (t === '+' || t === '-') op = t;
+            else if (t !== '') { let n = parseFloat(t); if (!isNaN(n)) total = (op === '+') ? total + n : total - n; }
         }
         return total;
     }
-
-    function applyMathEval(input) {
-        let val = parseMathExpression(input.value);
-        input.value = val ? val.toLocaleString('vi-VN') : '';
-    }
+    function applyMathEval(i) { let v = parseMath(i.value); i.value = v ? v.toLocaleString('vi-VN') : ''; }
 
     function addPerson() {
-        let nameInput = document.getElementById('personName');
-        let name = nameInput.value.trim();
-        
-        if (name === "") {
-            alert("Vui lòng nhập tên thành viên!");
-            return;
+        let n = document.getElementById('personName').value.trim();
+        let b = document.getElementById('personBank').value.trim();
+        let a = document.getElementById('personAcc').value.trim();
+        if (n && !people.find(p => p.name === n)) {
+            people.push({ name: n, bank: b, account: a });
+            document.getElementById('personName').value = '';
+            document.getElementById('personBank').value = '';
+            document.getElementById('personAcc').value = '';
+            saveData(); updateUI();
         }
-        if (people.includes(name)) {
-            alert("Tên này đã có trong danh sách rồi!");
-            nameInput.value = '';
-            return;
-        }
-        
-        people.push(name);
-        nameInput.value = '';
-        saveData();
-        updateUI();
     }
 
     function addExpense() {
-        let desc = document.getElementById('billDesc').value.trim();
+        let desc = document.getElementById('billDesc').value.trim() || "Khoản chi không tên";
         let payer = document.getElementById('payerSelect').value;
         let mode = document.getElementById('splitMode').value;
-        let amount = 0;
+        let totalBill = parseMath(document.getElementById('billTotal').value);
         let involved = [];
-        
-        let explicitTotal = parseMathExpression(document.getElementById('billAmount').value);
 
         if (mode === 'exact') {
-            let sumExact = 0;
-            let checkedCount = 0;
-
+            let sumExact = 0; let checkedCount = 0;
             document.querySelectorAll('.involved-row').forEach(row => {
                 let cb = row.querySelector('.involve-cb');
                 if (cb.checked) {
                     checkedCount++;
-                    let exactInput = row.querySelector('.exact-input').value;
-                    sumExact += parseMathExpression(exactInput);
+                    sumExact += parseMath(row.querySelector('.exact-input').value);
                 }
             });
-
-            if (checkedCount === 0) {
-                alert("Vui lòng chọn ít nhất 1 người tham gia!"); return;
-            }
-
-            let hasSharedRemainder = false;
-            let sharedPerPerson = 0;
-
-            if (explicitTotal > sumExact) {
-                hasSharedRemainder = true;
-                amount = explicitTotal;
-                sharedPerPerson = (explicitTotal - sumExact) / checkedCount;
-            } else {
-                amount = sumExact;
-            }
-
-            if (amount === 0) {
-                alert("Vui lòng nhập tiền riêng hoặc tổng bill!"); return;
-            }
-
+            let shared = (totalBill > sumExact) ? (totalBill - sumExact) / checkedCount : 0;
             document.querySelectorAll('.involved-row').forEach(row => {
                 let cb = row.querySelector('.involve-cb');
                 if (cb.checked) {
-                    let exactInput = row.querySelector('.exact-input').value;
-                    let money = parseMathExpression(exactInput);
-                    
-                    let finalOwed = money + sharedPerPerson;
-                    let detailText = hasSharedRemainder ? `(Riêng ${money.toLocaleString('vi-VN')}đ + Chung ${Math.round(sharedPerPerson).toLocaleString('vi-VN')}đ)` : `(${money.toLocaleString('vi-VN')}đ)`;
-                    
-                    if (finalOwed > 0) {
-                        involved.push({ name: cb.value, amountOwed: finalOwed, detail: detailText });
-                    }
+                    let own = parseMath(row.querySelector('.exact-input').value);
+                    involved.push({ name: cb.value, owed: own + shared });
                 }
             });
-            
-            mode = hasSharedRemainder ? 'mixed' : 'exact';
-
+            if (totalBill === 0) totalBill = sumExact;
         } else {
-            amount = explicitTotal;
-            if (!amount || amount <= 0) {
-                alert("Vui lòng nhập tổng tiền hợp lệ!"); return;
-            }
+            if (totalBill <= 0) { alert("Vui lòng nhập tổng tiền!"); return; }
+            let tW = 0;
             document.querySelectorAll('.involved-row').forEach(row => {
                 let cb = row.querySelector('.involve-cb');
-                let weight = parseFloat(row.querySelector('.weight-input').value) || 0;
-                if (cb.checked && weight > 0) {
-                    involved.push({ name: cb.value, weight: weight });
-                }
+                if (cb.checked) tW += parseFloat(row.querySelector('.weight-input').value);
+            });
+            document.querySelectorAll('.involved-row').forEach(row => {
+                let cb = row.querySelector('.involve-cb');
+                if (cb.checked) involved.push({ name: cb.value, owed: (totalBill / tW) * parseFloat(row.querySelector('.weight-input').value) });
             });
         }
-
-        if (!desc || !payer || involved.length === 0) {
-            alert("Vui lòng nhập đủ thông tin và chọn ít nhất 1 người tham gia!");
-            return;
-        }
-
-        expenses.push({ desc, amount, payer, involved, mode });
-        
-        document.getElementById('billDesc').value = '';
-        document.getElementById('billAmount').value = '';
-        document.querySelectorAll('.exact-input').forEach(input => input.value = '');
-        
-        saveData();
-        updateUI();
+        if (!payer || involved.length === 0) { alert("Thiếu thông tin!"); return; }
+        expenses.push({ desc, amount: totalBill, payer, involved, mode });
+        saveData(); updateUI();
+        document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = '';
     }
 
     function updateUI() {
-        document.getElementById('peopleList').innerHTML = people.map(p => `<span class="list-item" style="display:inline-block; margin-right:5px;">👤 ${p}</span>`).join('');
+        document.getElementById('peopleList').innerHTML = people.map(p => `<span class="item-card" style="margin:0">👤 ${p.name}</span>`).join('');
+        let ps = document.getElementById('payerSelect');
+        let cur = ps.value;
+        ps.innerHTML = '<option value="">-- Người trả --</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+        ps.value = cur;
+
+        let mode = document.getElementById('splitMode').value;
+        document.getElementById('involvedRows').innerHTML = people.map(p => `
+            <div class="involved-row">
+                <label><input type="checkbox" class="involve-cb" value="${p.name}" checked> ${p.name}</label>
+                <div class="flex-inputs">
+                    ${mode === 'exact' ? `Tiền: <input type="text" class="exact-input" onblur="applyMathEval(this)">` : `Suất: <input type="number" class="weight-input" value="1" step="0.1">`}
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('expensesList').innerHTML = expenses.map(e => `
+            <div class="item-card"><b>${e.desc}</b>: ${e.amount.toLocaleString('vi-VN')}đ <br> <small>👉 ${e.payer} trả</small></div>
+        `).join('');
         
-        let payerSelect = document.getElementById('payerSelect');
-        let currentPayer = payerSelect.value;
-        payerSelect.innerHTML = '<option value="">-- Chọn người trả --</option>' + people.map(p => `<option value="${p}">${p}</option>`).join('');
-        if (people.includes(currentPayer)) payerSelect.value = currentPayer;
-
-        let mode = document.getElementById('splitMode') ? document.getElementById('splitMode').value : 'ratio';
-        let sharedNote = document.getElementById('sharedNote');
-        let billAmountInput = document.getElementById('billAmount');
-
-        if (mode === 'exact') {
-            sharedNote.style.display = 'block';
-            billAmountInput.placeholder = "Tổng bill (Không bắt buộc)";
-            document.getElementById('involvedRows').innerHTML = people.map(p => `
-                <div class="involved-row">
-                    <label><input type="checkbox" class="involve-cb" value="${p}" checked> ${p}</label>
-                    <div>Tiền: <input type="text" class="exact-input" placeholder="VD: 30k + 15k" oninput="formatMathInput(this)" onblur="applyMathEval(this)"></div>
-                </div>
-            `).join('');
-        } else {
-            sharedNote.style.display = 'none';
-            billAmountInput.placeholder = "Tổng tiền Bill (Bắt buộc)";
-            document.getElementById('involvedRows').innerHTML = people.map(p => `
-                <div class="involved-row">
-                    <label><input type="checkbox" class="involve-cb" value="${p}" checked> ${p}</label>
-                    <div>Số suất: <input type="number" class="weight-input" value="1" min="0.1" step="0.1"></div>
-                </div>
-            `).join('');
-        }
-
-        document.getElementById('expensesList').innerHTML = expenses.map((e, idx) => {
-            let badgeHtml = '';
-            if (e.mode === 'mixed') badgeHtml = '<div class="badge badge-mixed">Tính riêng + Chia dư</div>';
-            else if (e.mode === 'exact') badgeHtml = '<div class="badge badge-exact">Tính riêng 100%</div>';
-            else badgeHtml = '<div class="badge badge-exact" style="background:#e8f4f8; color:#2c3e50;">Chia đều/Theo suất</div>';
-
-            return `
-            <div class="list-item">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
-                    <div>🧾 <b>${e.desc}</b>: ${e.amount.toLocaleString('vi-VN')}đ</div>
-                    ${badgeHtml}
-                </div>
-                <div style="color:#555; font-size: 0.9em; margin-top: 5px;">👉 <b>${e.payer}</b> đã trả</div>
-            </div>`;
-        }).join('');
+        if (document.getElementById('showStatsToggle').checked) toggleStats();
     }
 
-    let finalResultText = "";
+    function toggleStats() {
+        let box = document.getElementById('statsBox');
+        if (!document.getElementById('showStatsToggle').checked) { box.style.display = 'none'; return; }
+        box.style.display = 'block';
+        let s = {};
+        expenses.forEach(e => { s[e.desc] = (s[e.desc] || 0) + e.amount; });
+        box.innerHTML = '<h4>📊 Thống kê theo khoản chi:</h4>' + Object.keys(s).map(k => `
+            <div class="stat-line"><span>${k}</span><b>${s[k].toLocaleString('vi-VN')}đ</b></div>
+        `).join('');
+    }
 
+    let reportText = "";
     function calculateDebts() {
-        if (expenses.length === 0) return;
-        let balances = {};
-        people.forEach(p => balances[p] = 0);
-
-        expenses.forEach(exp => {
-            balances[exp.payer] += exp.amount;
-            
-            if (exp.mode === 'exact' || exp.mode === 'mixed') {
-                exp.involved.forEach(item => {
-                    balances[item.name] -= item.amountOwed;
-                });
-            } else {
-                let totalWeights = exp.involved.reduce((sum, item) => sum + item.weight, 0);
-                let pricePerWeight = exp.amount / totalWeights;
-                exp.involved.forEach(item => {
-                    balances[item.name] -= pricePerWeight * item.weight;
-                });
-            }
+        if (!expenses.length) return;
+        let bal = {}; people.forEach(p => bal[p.name] = 0);
+        expenses.forEach(e => {
+            bal[e.payer] += e.amount;
+            e.involved.forEach(i => bal[i.name] -= i.owed);
         });
 
-        let debtors = [], creditors = [];
-        for (let p in balances) {
-            let bal = Math.round(balances[p]);
-            if (bal < 0) debtors.push({ name: p, amount: -bal });
-            else if (bal > 0) creditors.push({ name: p, amount: bal });
+        let d = [], c = [];
+        for (let p in bal) {
+            let v = Math.round(bal[p]);
+            if (v < 0) d.push({ n: p, a: -v }); else if (v > 0) c.push({ n: p, a: v });
         }
+        d.sort((a,b)=>b.a-a.a); c.sort((a,b)=>b.a-a.a);
 
-        debtors.sort((a, b) => b.amount - a.amount);
-        creditors.sort((a, b) => b.amount - a.amount);
-
-        let results = [];
-        finalResultText = "💸 TỔNG KẾT CHI PHÍ\n------------------\n";
-        
-        let i = 0, j = 0;
-        while (i < debtors.length && j < creditors.length) {
-            let d = debtors[i], c = creditors[j];
-            let settle = Math.min(d.amount, c.amount);
+        let res = [], i = 0, j = 0;
+        reportText = "💸 TỔNG KẾT CHI PHÍ\n------------------\n";
+        while (i < d.length && j < c.length) {
+            let amount = Math.min(d[i].a, c[j].a);
+            let creditor = people.find(p => p.name === c[j].n);
+            let qrUrl = (creditor && creditor.bank && creditor.account) ? `https://img.vietqr.io/image/${creditor.bank}-${creditor.account}-compact2.jpg?amount=${amount}&addInfo=Tra_tien_bill` : null;
             
-            let line = `👉 ${d.name} chuyển cho ${c.name}: ${settle.toLocaleString('vi-VN')}đ`;
-            results.push(`<div class="result-item">${line}</div>`);
-            finalResultText += line + "\n";
-            
-            d.amount -= settle; 
-            c.amount -= settle;
-            
-            if (d.amount === 0) i++; 
-            if (c.amount === 0) j++;
+            let line = `👉 ${d[i].n} chuyển cho ${c[j].n}: ${amount.toLocaleString('vi-VN')}đ`;
+            res.push(`
+                <div class="result-item">
+                    ${line}
+                    ${qrUrl ? `<div class="qr-box"><p><small>Quét mã để trả nợ cho ${c[j].n}:</small></p><img src="${qrUrl}" class="qr-img"></div>` : ''}
+                </div>`);
+            reportText += line + "\n";
+            d[i].a -= amount; c[j].a -= amount;
+            if (d[i].a === 0) i++; if (c[j].a === 0) j++;
         }
-
-        document.getElementById('resultBox').innerHTML = results.length ? results.join('') : "🎉 Tuyệt vời! Đã bù trừ xong, không ai nợ ai đồng nào!";
-        document.getElementById('btnCopy').style.display = results.length ? 'block' : 'none';
+        document.getElementById('resultBox').innerHTML = res.join('') || "🎉 Đã xong, không ai nợ ai!";
+        document.getElementById('exportButtons').style.display = 'flex';
     }
 
-    function copyResultToClipboard() {
-        navigator.clipboard.writeText(finalResultText).then(() => {
-            alert("Đã copy kết quả thành công! Bạn có thể dán vào tin nhắn để gửi cho nhóm.");
-        });
+    function copyResultText() {
+        navigator.clipboard.writeText(reportText).then(() => alert("Đã copy văn bản!"));
+    }
+
+    function showReceipt() {
+        document.getElementById('mainApp').style.display = 'none';
+        let rec = document.getElementById('receiptSection');
+        rec.style.display = 'block';
+        document.getElementById('receiptDate').innerText = new Date().toLocaleString();
+        document.getElementById('receiptContent').innerHTML = `
+            <h4>CÁC KHOẢN CHI:</h4>
+            ${expenses.map(e => `<div class="stat-line"><span>${e.desc}</span><span>${e.amount.toLocaleString('vi-VN')}đ</span></div>`).join('')}
+            <h4 style="margin-top:20px">KẾT QUẢ CHUYỂN KHOẢN:</h4>
+            ${reportText.replace(/\n/g, '<br>')}
+        `;
+    }
+
+    function hideReceipt() {
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('receiptSection').style.display = 'none';
     }
 </script>
 
