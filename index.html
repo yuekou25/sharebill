@@ -23,10 +23,34 @@
             --box-bg: #252525; --modal-overlay: rgba(0,0,0,0.7);
         }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; padding-bottom: 90px; line-height: 1.5; transition: 0.3s; }
+        /* HIỆU ỨNG NỀN TIỀN BAY */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            margin: 0; padding: 20px; padding-bottom: 90px; line-height: 1.5; 
+            transition: background-color 0.3s, color 0.3s; 
+            
+            /* Vẽ icon 💸 và 💰 lặp lại */
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' opacity='0.08'%3E%3Ctext x='20' y='50' font-size='30' transform='rotate(15 20 50)'%3E💸%3C/text%3E%3Ctext x='90' y='110' font-size='25' transform='rotate(-20 90 110)'%3E💰%3C/text%3E%3C/svg%3E");
+            background-repeat: repeat;
+            /* Tạo hiệu ứng bay chéo liên tục */
+            animation: floatMoney 20s linear infinite;
+        }
+
+        /* Ở chế độ Dark Mode, làm mờ đi một chút để không bị chói */
+        body.dark-mode {
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' opacity='0.04'%3E%3Ctext x='20' y='50' font-size='30' transform='rotate(15 20 50)'%3E💸%3C/text%3E%3Ctext x='90' y='110' font-size='25' transform='rotate(-20 90 110)'%3E💰%3C/text%3E%3C/svg%3E");
+        }
+
+        @keyframes floatMoney {
+            0% { background-position: 0 0; }
+            100% { background-position: 150px 150px; }
+        }
+        /* KẾT THÚC HIỆU ỨNG NỀN */
+
         .container { max-width: 700px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s; position: relative; }
         
-        /* Quản lý Nhóm Header */
         .trip-manager { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--primary); }
         .trip-name-input { font-size: 24px; font-weight: bold; text-align: center; border: none; background: transparent; color: var(--primary); width: 100%; outline: none; padding: 5px; margin-bottom: 10px; transition: 0.2s; }
         .trip-name-input:focus { background: var(--box-bg); border-radius: 8px; }
@@ -91,7 +115,6 @@
         .modal-content { background-color: var(--card-bg); padding: 25px; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; cursor: pointer; color: var(--muted-text); }
 
-        /* Toast Notifications */
         #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 400px; }
         .toast { background: #333; color: white; padding: 14px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); animation: slideDown 0.3s ease-out forwards; font-weight: bold; text-align: center; opacity: 0; }
         .toast.success { background: var(--secondary); }
@@ -233,27 +256,18 @@
 </div>
 
 <script>
-    // --- HỆ THỐNG TOAST NOTIFICATION ---
     function showToast(msg, type = 'success') {
-        let box = document.getElementById('toastContainer');
-        let t = document.createElement('div');
-        t.className = `toast toast-${type}`;
-        t.innerText = msg;
-        box.appendChild(t);
-        setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; t.style.transition = '0.3s'; setTimeout(()=>t.remove(), 300); }, 2500);
+        let box = document.getElementById('toastContainer'); let t = document.createElement('div'); t.className = `toast toast-${type}`; t.innerText = msg;
+        box.appendChild(t); setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; t.style.transition = '0.3s'; setTimeout(()=>t.remove(), 300); }, 2500);
     }
 
-    // --- GIAO DIỆN SÁNG/TỐI & MODAL ---
-    let savedTheme = localStorage.getItem('theme');
-    let systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let savedTheme = localStorage.getItem('theme'); let systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) { document.body.classList.add('dark-mode'); document.getElementById('themeBtn').innerText = '☀️'; } 
     else { document.getElementById('themeBtn').innerText = '🌙'; }
 
     function toggleTheme() {
-        document.body.classList.toggle('dark-mode');
-        let isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
+        document.body.classList.toggle('dark-mode'); let isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light'); document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
     }
 
     function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
@@ -262,24 +276,19 @@
 
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(err => console.log(err)); }
 
-    // --- QUẢN LÝ DỮ LIỆU & NHÓM ---
     let appData = { trips: [], currentId: null };
     let currentTrip = null; let people = []; let expenses = []; let editingIndex = -1; let isAllSelected = true;
     
     function initData() {
         let stored = localStorage.getItem('sharebill_app_data');
-        if (stored) {
-            appData = JSON.parse(stored);
-        } else {
-            let oldP = localStorage.getItem('ultimate_people');
-            let oldE = localStorage.getItem('ultimate_expenses');
+        if (stored) { appData = JSON.parse(stored); } 
+        else {
+            let oldP = localStorage.getItem('ultimate_people'); let oldE = localStorage.getItem('ultimate_expenses');
             if (oldP || oldE) {
                 appData.trips.push({ id: 1, name: "Nhóm cũ", people: JSON.parse(oldP||'[]'), expenses: JSON.parse(oldE||'[]') });
-                appData.currentId = 1;
-                localStorage.removeItem('ultimate_people'); localStorage.removeItem('ultimate_expenses');
+                appData.currentId = 1; localStorage.removeItem('ultimate_people'); localStorage.removeItem('ultimate_expenses');
             } else {
-                appData.trips.push({ id: Date.now(), name: "Nhóm 1", people: [], expenses: [] });
-                appData.currentId = appData.trips[0].id;
+                appData.trips.push({ id: Date.now(), name: "Nhóm 1", people: [], expenses: [] }); appData.currentId = appData.trips[0].id;
             }
         }
         loadCurrentTrip();
@@ -288,19 +297,11 @@
     function loadCurrentTrip() {
         currentTrip = appData.trips.find(t => t.id === appData.currentId);
         if (!currentTrip && appData.trips.length > 0) currentTrip = appData.trips[0];
-        if (!currentTrip) { 
-            currentTrip = { id: Date.now(), name: "Nhóm mới", people: [], expenses: [] };
-            appData.trips.push(currentTrip);
-        }
-        appData.currentId = currentTrip.id;
-        people = currentTrip.people; expenses = currentTrip.expenses;
+        if (!currentTrip) { currentTrip = { id: Date.now(), name: "Nhóm mới", people: [], expenses: [] }; appData.trips.push(currentTrip); }
+        appData.currentId = currentTrip.id; people = currentTrip.people; expenses = currentTrip.expenses;
         
         document.getElementById('tripNameInput').value = currentTrip.name;
-        
-        let sel = document.getElementById('tripSelect');
-        sel.innerHTML = appData.trips.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-        sel.value = currentTrip.id;
-        
+        let sel = document.getElementById('tripSelect'); sel.innerHTML = appData.trips.map(t => `<option value="${t.id}">${t.name}</option>`).join(''); sel.value = currentTrip.id;
         updateUI();
     }
 
@@ -314,60 +315,38 @@
     function switchTrip() { appData.currentId = parseInt(document.getElementById('tripSelect').value); loadCurrentTrip(); showToast("Đã chuyển nhóm", "info"); }
     function createNewTrip() {
         let newTrip = { id: Date.now(), name: `Nhóm ${appData.trips.length + 1}`, people: [], expenses: [] };
-        appData.trips.push(newTrip); appData.currentId = newTrip.id;
-        saveData(); loadCurrentTrip(); showToast("Đã tạo nhóm mới!", "success");
+        appData.trips.push(newTrip); appData.currentId = newTrip.id; saveData(); loadCurrentTrip(); showToast("Đã tạo nhóm mới!", "success");
     }
 
     function deleteCurrentTrip() {
         if(appData.trips.length === 1) { showToast("Không thể xóa nhóm cuối cùng!", "error"); return; }
         if(confirm(`Xóa toàn bộ dữ liệu của nhóm "${currentTrip.name}"?`)) {
-            appData.trips = appData.trips.filter(t => t.id !== appData.currentId);
-            appData.currentId = appData.trips[0].id;
+            appData.trips = appData.trips.filter(t => t.id !== appData.currentId); appData.currentId = appData.trips[0].id;
             saveData(); loadCurrentTrip(); closeSettings(); showToast("Đã xóa nhóm", "success");
         }
     }
 
     function clearAllData() { 
         if(confirm("⚠️ Xóa sạch mọi nhóm và khôi phục App về trạng thái ban đầu?")) { 
-            localStorage.clear(); appData = { trips: [], currentId: null };
-            initData(); document.getElementById('resultBox').innerHTML = ''; document.getElementById('exportButtons').style.display = 'none'; 
-            cancelEdit(); closeSettings(); showToast("Đã reset ứng dụng", "success");
+            localStorage.clear(); appData = { trips: [], currentId: null }; initData(); document.getElementById('resultBox').innerHTML = ''; document.getElementById('exportButtons').style.display = 'none'; cancelEdit(); closeSettings(); showToast("Đã reset ứng dụng", "success");
         } 
     }
 
-    // --- GIAO DIỆN ĐA NGƯỜI TRẢ (MULTI-PAYER) ---
     function handlePayerChange() {
-        let val = document.getElementById('payerSelect').value;
-        let box = document.getElementById('multiPayerBox');
-        let list = document.getElementById('multiPayerList');
-        
+        let val = document.getElementById('payerSelect').value; let box = document.getElementById('multiPayerBox'); let list = document.getElementById('multiPayerList');
         if (val === 'MULTI') {
-            box.style.display = 'block';
-            document.getElementById('billTotal').placeholder = "Máy tự cộng từ tiền góp";
-            document.getElementById('billTotal').readOnly = true;
-            document.getElementById('billTotal').style.backgroundColor = 'var(--bg-color)';
-            
-            list.innerHTML = people.map(p => `
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding: 4px 0;">
-                    <span>👤 ${p.name}</span>
-                    <input type="text" class="multi-payer-input" data-name="${p.name}" placeholder="VD: 50k" style="width:100px; padding:6px; margin:0; text-align:right;" oninput="formatMathInput(this)" onblur="applyMathEval(this); updateMultiPayerTotal()">
-                </div>
-            `).join('');
+            box.style.display = 'block'; document.getElementById('billTotal').placeholder = "Máy tự cộng từ tiền góp"; document.getElementById('billTotal').readOnly = true; document.getElementById('billTotal').style.backgroundColor = 'var(--bg-color)';
+            list.innerHTML = people.map(p => `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding: 4px 0;"><span>👤 ${p.name}</span><input type="text" class="multi-payer-input" data-name="${p.name}" placeholder="VD: 50k" style="width:100px; padding:6px; margin:0; text-align:right;" oninput="formatMathInput(this)" onblur="applyMathEval(this); updateMultiPayerTotal()"></div>`).join('');
         } else {
-            box.style.display = 'none';
-            document.getElementById('billTotal').placeholder = "Tổng tiền Bill (VD: 500k)";
-            document.getElementById('billTotal').readOnly = false;
-            document.getElementById('billTotal').style.backgroundColor = 'var(--input-bg)';
+            box.style.display = 'none'; document.getElementById('billTotal').placeholder = "Tổng tiền Bill (VD: 500k)"; document.getElementById('billTotal').readOnly = false; document.getElementById('billTotal').style.backgroundColor = 'var(--input-bg)';
         }
     }
 
     function updateMultiPayerTotal() {
-        let total = 0;
-        document.querySelectorAll('.multi-payer-input').forEach(inp => { total += parseMath(inp.value); });
+        let total = 0; document.querySelectorAll('.multi-payer-input').forEach(inp => { total += parseMath(inp.value); });
         document.getElementById('billTotal').value = total > 0 ? total.toLocaleString('vi-VN') : '';
     }
 
-    // --- KÉO THẢ & XÓA THÀNH VIÊN ---
     function toggleSelectAll() { isAllSelected = !isAllSelected; document.querySelectorAll('.involve-cb').forEach(cb => { cb.checked = isAllSelected; }); }
     function dragStart(e, name) { e.dataTransfer.setData('text/plain', name); document.getElementById('trashZone').style.display = 'block'; }
     function dragEnd(e) { document.getElementById('trashZone').style.display = 'none'; document.getElementById('trashZone').style.background = 'rgba(231, 76, 60, 0.1)'; }
@@ -385,26 +364,23 @@
         if (confirm(`Xóa thành viên "${name}" khỏi nhóm?`)) { people = people.filter(p => p.name !== name); saveData(); updateUI(); showToast(`Đã xóa ${name}`, "success"); }
     }
 
-    // --- ĐỒNG BỘ DỮ LIỆU ---
     function exportData() {
         let code = "SHAREBILL_" + btoa(encodeURIComponent(JSON.stringify(appData)));
-        navigator.clipboard.writeText(code).then(() => { showToast("✅ Đã copy MÃ ĐỒNG BỘ!", "success"); closeSettings();
-        }).catch(() => { prompt("Thiết bị chặn copy tự động. Hãy copy mã bên dưới:", code); });
+        navigator.clipboard.writeText(code).then(() => { showToast("✅ Đã copy MÃ ĐỒNG BỘ!", "success"); closeSettings(); }).catch(() => { prompt("Hãy copy mã bên dưới:", code); });
     }
     function importData() {
-        let code = prompt("📥 Dán MÃ ĐỒNG BỘ vào ô bên dưới:\n(Lưu ý: Toàn bộ dữ liệu các nhóm trên máy bạn sẽ bị ghi đè)");
+        let code = prompt("📥 Dán MÃ ĐỒNG BỘ vào ô bên dưới:\n(Lưu ý: Toàn bộ nhóm trên máy bạn sẽ bị ghi đè)");
         if (!code) return; if (code.startsWith("SHAREBILL_")) code = code.replace("SHAREBILL_", "");
         try {
             let data = JSON.parse(decodeURIComponent(atob(code)));
-            if (data.trips) { appData = data; saveData(); loadCurrentTrip(); closeSettings(); showToast("Đồng bộ thành công!", "success");
-            } else if (data.p && data.e) { 
+            if (data.trips) { appData = data; saveData(); loadCurrentTrip(); closeSettings(); showToast("Đồng bộ thành công!", "success"); } 
+            else if (data.p && data.e) { 
                 appData.trips.push({ id: Date.now(), name: "Nhóm Import", people: data.p, expenses: data.e });
                 appData.currentId = appData.trips[appData.trips.length-1].id; saveData(); loadCurrentTrip(); closeSettings(); showToast("Đồng bộ thành công!", "success");
             } else { showToast("Mã không hợp lệ!", "error"); }
         } catch (err) { showToast("Mã bị lỗi!", "error"); }
     }
 
-    // --- TOÁN HỌC ---
     function formatMathInput(i) { i.value = i.value.replace(/[^0-9.,+\- kK]/g, ''); }
     function parseMath(str) {
         if (!str) return 0; str = str.replace(/[.,]/g, '').replace(/[kK]/g, '000').replace(/[^0-9+\-]/g, '');
@@ -423,7 +399,6 @@
         let desc = document.getElementById('billDesc').value.trim() || "Khoản chi"; let payerSel = document.getElementById('payerSelect').value; let mode = document.getElementById('splitMode').value;
         let totalBill = parseMath(document.getElementById('billTotal').value); let involved = [];
         
-        // Xử lý Người Trả
         let finalPayers = [];
         if (payerSel === 'MULTI') {
             document.querySelectorAll('.multi-payer-input').forEach(inp => { let m = parseMath(inp.value); if(m > 0) finalPayers.push({name: inp.dataset.name, amount: m}); });
@@ -486,8 +461,7 @@
         if (e.payers && e.payers.length > 1) { ps.value = 'MULTI'; handlePayerChange(); e.payers.forEach(p => { let inp = document.querySelector(`.multi-payer-input[data-name="${p.name}"]`); if(inp) inp.value = p.amount; }); } 
         else { ps.value = e.payer || (e.payers[0].name); handlePayerChange(); }
         
-        document.getElementById('billTotal').value = e.amount;
-        updateUI(true);
+        document.getElementById('billTotal').value = e.amount; updateUI(true);
         
         document.querySelectorAll('.involved-row').forEach(row => {
             let cb = row.querySelector('.involve-cb'); let personInExp = e.involved.find(i => i.name === cb.value);
@@ -636,7 +610,6 @@
         }).catch(err => { showToast("Lỗi khi tạo ảnh!", "error"); btn.innerText = "💾 Tải ảnh hóa đơn về máy"; });
     }
 
-    // Khởi chạy dữ liệu
     initData();
 </script>
 </body>
