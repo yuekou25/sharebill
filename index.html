@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2980b9">
-    <link rel="apple-touch-icon" href="https://www.flaticon.com/free-icon/poverty_4776026?term=poor&related_id=4776026.png?v=5">
+    <link rel="apple-touch-icon" href="https://www.flaticon.com/free-icon/poverty_4776026?term=poor&related_id=4776026.png?v=6">
     
     <title>Share Bill Ultimate</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -23,32 +23,37 @@
             --box-bg: #252525; --modal-overlay: rgba(0,0,0,0.7);
         }
 
-        /* --- NỀN ICON TIỀN ĐÃ ĐƯỢC LÀM NHỎ & CĂN ĐỀU LẠI --- */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: var(--bg-color); 
             color: var(--text-color); 
             margin: 0; padding: 20px; padding-bottom: 90px; line-height: 1.5; 
             transition: background-color 0.3s, color 0.3s; 
-            
-            /* Giữ nguyên kích thước lưới 160x160 để toán học chuẩn xác khi repeat */
-            /* Giảm font-size từ 40 xuống 25, chỉnh lại x y để nằm chính giữa các quadrant cho đều */
-            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' opacity='0.15'%3E%3Ctext x='40' y='50' font-size='25' transform='rotate(15 40 40)'%3E💸%3C/text%3E%3Ctext x='120' y='130' font-size='25' transform='rotate(-15 120 120)'%3E💰%3C/text%3E%3C/svg%3E");
+        }
+
+        /* --- NỀN ICON TIỀN: XỬ LÝ QUA GPU & MÃ HÓA BASE64 ĐỂ KHÔNG BAO GIỜ LỖI --- */
+        body::before {
+            content: "";
+            position: fixed;
+            top: -160px; left: -160px; right: -160px; bottom: -160px;
+            background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiBvcGFjaXR5PSIwLjE1Ij48dGV4dCB4PSI0MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjUiIHRyYW5zZm9ybT0icm90YXRlKDE1IDQwIDQwKSI+8J+S4DwvdGV4dD48dGV4dCB4PSIxMjAiIHk9IjEzMCIgZm9udC1zaXplPSIyNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTE1IDEyMCAxMjApIj7wn5LwPC90ZXh0Pjwvc3ZnPg==");
             background-repeat: repeat;
+            z-index: 0;
+            pointer-events: none;
             animation: floatMoney 25s linear infinite;
         }
 
-        body.dark-mode {
-            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' opacity='0.08'%3E%3Ctext x='40' y='50' font-size='25' transform='rotate(15 40 40)'%3E💸%3C/text%3E%3Ctext x='120' y='130' font-size='25' transform='rotate(-15 120 120)'%3E💰%3C/text%3E%3C/svg%3E");
+        body.dark-mode::before {
+            background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiBvcGFjaXR5PSIwLjA4Ij48dGV4dCB4PSI0MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjUiIHRyYW5zZm9ybT0icm90YXRlKDE1IDQwIDQwKSI+8J+S4DwvdGV4dD48dGV4dCB4PSIxMjAiIHk9IjEzMCIgZm9udC1zaXplPSIyNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTE1IDEyMCAxMjApIj7wn5LwPC90ZXh0Pjwvc3ZnPg==");
         }
 
         @keyframes floatMoney {
-            0% { background-position: 0 0; }
-            100% { background-position: 160px 160px; } /* Phải khớp với width/height của SVG */
+            0% { transform: translate(0px, 0px); }
+            100% { transform: translate(160px, 160px); }
         }
-        /* ----------------------------------------------------- */
+        /* ------------------------------------------------------------------------ */
 
-        .container { max-width: 700px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s; position: relative; }
+        .container { max-width: 700px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s; position: relative; z-index: 1; }
         
         .trip-manager { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--primary); }
         .trip-name-input { font-size: 24px; font-weight: bold; text-align: center; border: none; background: transparent; color: var(--primary); width: 100%; outline: none; padding: 5px; margin-bottom: 10px; transition: 0.2s; }
@@ -75,12 +80,11 @@
         .involved-row:last-child { border-bottom: none; }
         .flex-inputs { display: flex; gap: 10px; } .flex-inputs input { width: 100px; margin: 0; }
 
-        /* Căn giữa QR Code */
         .qr-box { text-align: center; margin-top: 15px; padding: 15px; border: 1px dashed var(--border-color); border-radius: 8px; background: var(--box-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .qr-img { max-width: 150px; border-radius: 8px; margin-top: 5px; margin: 0 auto; display: block; }
         
         .receipt-wrapper { display: none; max-width: 500px; margin: auto; }
-        .receipt-capture-area { background: #ffffff; color: #000000; padding: 30px; font-family: 'Courier New', Courier, monospace; }
+        .receipt-capture-area { background: #ffffff; color: #000000; padding: 30px; font-family: 'Courier New', Courier, monospace; position: relative; z-index: 10; }
         .receipt-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
         
         .stats-box { background: var(--box-bg); border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; margin-top: 20px; display: none; }
@@ -192,254 +196,6 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; margin-top: 10px;">
             <label style="margin: 0;"><b>Chi tiết cho từng người:</b></label>
             <span style="font-size: 13px; color: var(--primary); cursor: pointer; font-weight: bold; padding: 5px;" onclick="toggleSelectAll()">☑️ Chọn/Bỏ chọn tất cả</span>
-        </div>
-        <div id="involvedRows" class="involved-list"></div>
-
-        <button class="btn-green" id="btnAddExpense" onclick="addExpense()">+ Thêm Khoản Chi</button>
-        <button class="btn-red" id="btnCancelEdit" style="display: none;" onclick="cancelEdit()">❌ Hủy Sửa</button>
-
-        <div id="expensesList" class="list-box" style="margin-top: 20px;"></div>
-        
-        <label style="cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: bold; margin-top: 15px; padding: 10px; background: var(--box-bg); border-radius: 8px;">
-            <input type="checkbox" id="showStatsToggle" onchange="toggleStats()" style="width: 20px; height: 20px; margin: 0;"> 📊 Hiển thị Biểu đồ Thống kê
-        </label>
-        <div id="statsBox" class="stats-box"></div>
-    </div>
-
-    <div class="section" style="border-bottom: none;" id="finalResultSection">
-        <div id="resultBox" style="margin-top: 10px;"></div>
-        <div id="exportButtons" style="display: none; gap: 10px; margin-top: 15px;">
-            <button class="btn-blue" onclick="copyResultText()">📋 Copy văn bản</button>
-            <button class="btn-green" onclick="showReceipt()">🖼 Mở Hóa đơn để Lưu</button>
-        </div>
-    </div>
-</div>
-
-<div id="settingsModal" class="modal">
-    <div class="modal-content">
-        <span class="close-modal" onclick="closeSettings()">&times;</span>
-        <h2 style="margin-top: 0;">⚙️ Cài đặt & Dữ liệu</h2>
-        
-        <div style="background: var(--box-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
-            <h4 style="margin: 0 0 10px 0; color: var(--primary);">🔄 Đồng bộ dữ liệu</h4>
-            <p style="font-size: 13px; color: var(--muted-text); margin-top: 0;">Chép tất cả các nhóm sang máy khác</p>
-            <button class="btn-purple" style="margin-top: 0; padding: 10px;" onclick="exportData()">📤 Lấy mã đồng bộ</button>
-            <button class="btn-blue" style="padding: 10px;" onclick="importData()">📥 Nhập mã đồng bộ</button>
-        </div>
-
-        <div style="background: rgba(231, 76, 60, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(231, 76, 60, 0.3);">
-            <h4 style="margin: 0 0 10px 0; color: var(--danger);">⚠️ Vùng nguy hiểm</h4>
-            <button class="btn-outline" style="margin-top: 0; padding: 10px; border-color: var(--danger); color: var(--danger);" onclick="deleteCurrentTrip()">🗑 Xóa nhóm hiện tại</button>
-            <button class="btn-red" style="padding: 10px;" onclick="clearAllData()">🧨 Xóa sạch mọi nhóm & dữ liệu App</button>
-        </div>
-    </div>
-</div>
-
-<div id="receiptWrapper" class="receipt-wrapper">
-    <div id="receiptCaptureArea" class="receipt-capture-area">
-        <div class="receipt-header">
-            <h2 id="receiptTripName" style="margin:0; font-family: 'Courier New', Courier, monospace; color: #000; text-transform: uppercase;"></h2>
-            <p id="receiptDate" style="margin: 5px 0; font-size: 14px; color: #333;"></p>
-        </div>
-        <div id="receiptContent"></div>
-        <p style="text-align: center; margin-top: 30px; font-weight: bold; color: #000;">--- CẢM ƠN BẠN ---</p>
-    </div>
-    <div id="renderResult" style="display:none; text-align:center; margin-top:15px; border: 2px solid #27ae60; padding:10px; background: #e8f5e9;">
-        <p style="color: #2e7d32; font-weight: bold; margin-top:0;">✅ Đã tạo ảnh thành công!</p>```html
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2980b9">
-    <link rel="apple-touch-icon" href="[https://cdn-icons-png.flaticon.com/512/3135/3135706.png?v=5](https://cdn-icons-png.flaticon.com/512/3135/3135706.png?v=5)">
-    
-    <title>Share Bill Ultimate</title>
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js](https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js)"></script>
-
-    <style>
-        :root { 
-            --primary: #2980b9; --secondary: #27ae60; --danger: #e74c3c; --purple: #8e44ad; 
-            --bg-color: #f0f2f5; --card-bg: #ffffff; --text-color: #333333; 
-            --border-color: #eeeeee; --input-bg: #ffffff; --muted-text: #666666;
-            --box-bg: #f8fafc; --modal-overlay: rgba(0,0,0,0.5);
-        }
-        body.dark-mode {
-            --bg-color: #121212; --card-bg: #1e1e1e; --text-color: #f5f5f5; 
-            --border-color: #333333; --input-bg: #2d2d2d; --muted-text: #aaaaaa;
-            --box-bg: #252525; --modal-overlay: rgba(0,0,0,0.7);
-        }
-
-        /* --- NỀN ICON TIỀN ĐÃ ĐƯỢC LÀM NHỎ & CĂN ĐỀU LẠI --- */
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: var(--bg-color); 
-            color: var(--text-color); 
-            margin: 0; padding: 20px; padding-bottom: 90px; line-height: 1.5; 
-            transition: background-color 0.3s, color 0.3s; 
-            
-            /* Giữ nguyên kích thước lưới 160x160 để toán học chuẩn xác khi repeat */
-            /* Giảm font-size từ 40 xuống 25, chỉnh lại x y để nằm chính giữa các quadrant cho đều */
-            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' width='160' height='160' opacity='0.15'%3E%3Ctext x='40' y='50' font-size='25' transform='rotate(15 40 40)'%3E💸%3C/text%3E%3Ctext x='120' y='130' font-size='25' transform='rotate(-15 120 120)'%3E💰%3C/text%3E%3C/svg%3E");
-            background-repeat: repeat;
-            animation: floatMoney 25s linear infinite;
-        }
-
-        body.dark-mode {
-            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' width='160' height='160' opacity='0.08'%3E%3Ctext x='40' y='50' font-size='25' transform='rotate(15 40 40)'%3E💸%3C/text%3E%3Ctext x='120' y='130' font-size='25' transform='rotate(-15 120 120)'%3E💰%3C/text%3E%3C/svg%3E");
-        }
-
-        @keyframes floatMoney {
-            0% { background-position: 0 0; }
-            100% { background-position: 160px 160px; } /* Phải khớp với width/height của SVG */
-        }
-        /* ----------------------------------------------------- */
-
-        .container { max-width: 700px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s; position: relative; }
-        
-        .trip-manager { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--primary); }
-        .trip-name-input { font-size: 24px; font-weight: bold; text-align: center; border: none; background: transparent; color: var(--primary); width: 100%; outline: none; padding: 5px; margin-bottom: 10px; transition: 0.2s; }
-        .trip-name-input:focus { background: var(--box-bg); border-radius: 8px; }
-        .trip-controls { display: flex; gap: 10px; justify-content: center; align-items: center; }
-        .trip-controls select { margin: 0; width: 60%; font-weight: bold; }
-        
-        h2 { color: var(--text-color); margin-top: 0; margin-bottom: 15px; font-size: 18px; }
-        .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px dashed var(--border-color); }
-        .section:last-child { border-bottom: none; }
-        
-        input, select, textarea { width: calc(100% - 24px); padding: 12px; margin: 8px 0; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); border-radius: 8px; font-size: 15px; outline: none; }
-        input:focus, select:focus { border-color: var(--primary); }
-        
-        button { width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
-        .btn-blue { background-color: var(--primary); } .btn-green { background-color: var(--secondary); }
-        .btn-red { background-color: var(--danger); } .btn-purple { background-color: var(--purple); }
-        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-        
-        .list-box { background: var(--box-bg); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .item-card { background: var(--card-bg); padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
-        
-        .involved-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border-color); }
-        .involved-row:last-child { border-bottom: none; }
-        .flex-inputs { display: flex; gap: 10px; } .flex-inputs input { width: 100px; margin: 0; }
-
-        /* Căn giữa QR Code */
-        .qr-box { text-align: center; margin-top: 15px; padding: 15px; border: 1px dashed var(--border-color); border-radius: 8px; background: var(--box-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .qr-img { max-width: 150px; border-radius: 8px; margin-top: 5px; margin: 0 auto; display: block; }
-        
-        .receipt-wrapper { display: none; max-width: 500px; margin: auto; }
-        .receipt-capture-area { background: #ffffff; color: #000000; padding: 30px; font-family: 'Courier New', Courier, monospace; }
-        .receipt-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        
-        .stats-box { background: var(--box-bg); border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; margin-top: 20px; display: none; }
-        .stat-bar-container { width: 100%; background: var(--border-color); border-radius: 6px; height: 10px; margin-top: 5px; overflow: hidden; }
-        .stat-bar { height: 100%; border-radius: 6px; transition: width 0.5s ease-in-out; }
-        
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;}
-        .badge-exact { background-color: rgba(41, 128, 185, 0.2); color: #3498db; }
-        .badge-mixed { background-color: rgba(243, 156, 18, 0.2); color: #f39c12; }
-        
-        .header-buttons { position: absolute; top: 15px; right: 15px; display: flex; gap: 15px; z-index: 10; }
-        .icon-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 5px; margin: 0; }
-        
-        .expense-header { cursor: pointer; transition: 0.2s; }
-        .expense-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-color); font-size: 14px; color: var(--text-color); background-color: var(--box-bg); border-radius: 6px; padding: 10px; }
-        .detail-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border-color); }
-        .detail-row:last-child { border-bottom: none; }
-        .toggle-icon { display: inline-block; transition: transform 0.3s; font-size: 12px; color: var(--muted-text); }
-        .btn-action-icon { cursor: pointer; transition: 0.2s; padding: 4px; border-radius: 4px; }
-        .btn-action-icon:hover { background: rgba(0,0,0,0.1); }
-        .draggable-member { cursor: grab; user-select: none; transition: 0.2s; touch-action: pan-y; }
-        
-        .summary-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        .summary-table th, .summary-table td { padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right; }
-        .summary-table th:first-child, .summary-table td:first-child { text-align: left; }
-        .summary-table th { background: var(--box-bg); font-weight: bold; }
-
-        .sticky-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); padding: 15px 20px; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); z-index: 1000; display: flex; justify-content: center; box-sizing: border-box; transition: 0.3s; }
-        .sticky-bottom-content { width: 100%; max-width: 700px; display: flex; gap: 10px; }
-
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: var(--modal-overlay); align-items: center; justify-content: center; backdrop-filter: blur(3px); }
-        .modal-content { background-color: var(--card-bg); padding: 25px; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; }
-        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; cursor: pointer; color: var(--muted-text); }
-
-        #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 400px; }
-        .toast { background: #333; color: white; padding: 14px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); animation: slideDown 0.3s ease-out forwards; font-weight: bold; text-align: center; opacity: 0; }
-        .toast.success { background: var(--secondary); }
-        .toast.error { background: var(--danger); }
-        .toast.info { background: var(--primary); }
-        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    </style>
-</head>
-<body>
-
-<div id="toastContainer"></div>
-
-<div class="sticky-bottom">
-    <div class="sticky-bottom-content">
-        <button class="btn-purple" style="margin: 0;" onclick="calculateDebtsAndScroll()">🧮 TÍNH TOÁN & CHỐT SỔ</button>
-    </div>
-</div>
-
-<div class="container" id="mainApp">
-    <div class="header-buttons">
-        <button class="icon-btn" onclick="openSettings()" title="Cài đặt">⚙️</button>
-        <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Chế độ">🌙</button>
-    </div>
-    
-    <div class="trip-manager">
-        <input type="text" id="tripNameInput" class="trip-name-input" placeholder="Tên nhóm..." onchange="renameTrip()" title="Bấm vào để đổi tên nhóm">
-        <div class="trip-controls">
-            <select id="tripSelect" onchange="switchTrip()"></select>
-            <button class="btn-green" style="width: auto; margin: 0; padding: 10px 15px;" onclick="createNewTrip()" title="Tạo nhóm mới">➕ Thêm Nhóm</button>
-        </div>
-        </div>
-
-    <div class="section">
-        <h2>👥 Thành viên</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <input type="text" id="personName" placeholder="Tên (Bắt buộc)">
-            <input type="text" id="personBank" placeholder="Ngân hàng (VD: VCB)">
-        </div>
-        <input type="text" id="personAcc" placeholder="Số tài khoản / Nickname">
-        <button class="btn-blue" onclick="addPerson()">+ Thêm Thành Viên</button>
-        
-        <p style="font-size: 13px; color: var(--muted-text); text-align: center; margin-bottom: 5px;">
-            💡 Ấn giữ 1 giây (hoặc kéo thả) để xóa thẻ tên.
-        </p>
-        <div id="peopleList" class="list-box" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-        
-        <div id="trashZone" ondragover="dragOverTrash(event)" ondragleave="dragLeaveTrash(event)" ondrop="dropTrash(event)" style="display:none; border: 2px dashed var(--danger); padding: 15px; text-align: center; border-radius: 8px; margin-top: 10px; background: rgba(231, 76, 60, 0.1); color: var(--danger); font-weight: bold;">
-            🗑️ Thả vào đây để xóa
-        </div>
-    </div>
-
-    <div class="section" id="expenseSection">
-        <h2>🧾 Thêm khoản chi</h2>
-        <input type="text" id="billDesc" placeholder="Tên khoản chi (VD: Ăn lẩu, Taxi...)">
-        
-        <label><b>Ai đã trả tiền?</b></label>
-        <select id="payerSelect" onchange="handlePayerChange()"></select>
-        
-        <div id="multiPayerBox" style="display: none; background: var(--box-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 5px;">
-            <p style="font-size: 13px; margin: 0 0 10px 0; color: var(--primary); font-weight: bold;">Nhập số tiền mỗi người đã góp vào hóa đơn này:</p>
-            <div id="multiPayerList" style="display: flex; flex-direction: column; gap: 5px;"></div>
-        </div>
-
-        <label style="display: block; margin-top: 10px;"><b>Cách chia:</b></label>
-        <select id="splitMode" onchange="updateUI()">
-            <option value="ratio">🔄 Chia đều / Theo suất</option>
-            <option value="exact">🎯 Nhập tiền riêng (+ Tự động chia dư)</option>
-        </select>
-
-        <div id="amountContainer">
-            <input type="text" id="billTotal" placeholder="Tổng tiền Bill (VD: 500k)" oninput="formatMathInput(this)" onblur="applyMathEval(this)">
-            <div id="sharedNote" style="font-size: 13px; color: #d35400; display: none; margin-top: -5px; margin-bottom: 10px;"></div>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; margin-top: 10px;">
-            <label style="margin: 0;"><b>Chi tiết cho từng người:</b></label>
-            <span style="font-size: 13px; color: var(--primary); cursor: pointer; font-weight: bold; padding: 5px;" onclick="toggleSelectAll()">☑️ Chọn tất cả</span>
         </div>
         <div id="involvedRows" class="involved-list"></div>
 
