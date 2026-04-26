@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2980b9">
-    <link rel="apple-touch-icon" href="https://www.flaticon.com/free-icon/poverty_4776026?term=poor&related_id=4776026.png?v=2">
+    <link rel="apple-touch-icon" href="https://www.flaticon.com/free-icon/poverty_4776026?term=poor&related_id=4776026.png?v=4">
     
     <title>Share Bill Ultimate</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -25,7 +25,14 @@
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; padding-bottom: 90px; line-height: 1.5; transition: 0.3s; }
         .container { max-width: 700px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s; position: relative; }
-        h1, h2 { text-align: center; color: var(--text-color); margin-bottom: 20px; }
+        
+        /* Trip Manager Header */
+        .trip-manager { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--primary); }
+        .trip-name-input { font-size: 24px; font-weight: bold; text-align: center; border: none; background: transparent; color: var(--primary); width: 100%; outline: none; padding: 5px; margin-bottom: 10px; }
+        .trip-controls { display: flex; gap: 10px; justify-content: center; align-items: center; }
+        .trip-controls select { margin: 0; width: 60%; font-weight: bold; }
+        
+        h2 { color: var(--text-color); margin-top: 0; margin-bottom: 15px; font-size: 18px; }
         .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px dashed var(--border-color); }
         .section:last-child { border-bottom: none; }
         
@@ -50,7 +57,6 @@
         .receipt-wrapper { display: none; max-width: 500px; margin: auto; }
         .receipt-capture-area { background: #ffffff; color: #000000; padding: 30px; font-family: 'Courier New', Courier, monospace; }
         .receipt-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        .action-buttons { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
         
         .stats-box { background: var(--box-bg); border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; margin-top: 20px; display: none; }
         .stat-bar-container { width: 100%; background: var(--border-color); border-radius: 6px; height: 10px; margin-top: 5px; overflow: hidden; }
@@ -60,8 +66,8 @@
         .badge-exact { background-color: rgba(41, 128, 185, 0.2); color: #3498db; }
         .badge-mixed { background-color: rgba(243, 156, 18, 0.2); color: #f39c12; }
         
-        .header-buttons { position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; }
-        .icon-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; margin: 0; }
+        .header-buttons { position: absolute; top: 15px; right: 15px; display: flex; gap: 15px; z-index: 10; }
+        .icon-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 5px; margin: 0; }
         
         .expense-header { cursor: pointer; transition: 0.2s; }
         .expense-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-color); font-size: 14px; color: var(--text-color); background-color: var(--box-bg); border-radius: 6px; padding: 10px; }
@@ -70,26 +76,32 @@
         .toggle-icon { display: inline-block; transition: transform 0.3s; font-size: 12px; color: var(--muted-text); }
         .btn-action-icon { cursor: pointer; transition: 0.2s; padding: 4px; border-radius: 4px; }
         .btn-action-icon:hover { background: rgba(0,0,0,0.1); }
-        .draggable-member { cursor: grab; user-select: none; transition: transform 0.2s, box-shadow 0.2s; touch-action: pan-y; }
-        .draggable-member:active { cursor: grabbing; transform: scale(1.05); }
-
-        /* Bảng giải trình nợ */
+        .draggable-member { cursor: grab; user-select: none; transition: 0.2s; touch-action: pan-y; }
+        
         .summary-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         .summary-table th, .summary-table td { padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right; }
         .summary-table th:first-child, .summary-table td:first-child { text-align: left; }
         .summary-table th { background: var(--box-bg); font-weight: bold; }
 
-        /* Nút tính toán nổi (Sticky Bottom) */
         .sticky-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); padding: 15px 20px; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); z-index: 1000; display: flex; justify-content: center; box-sizing: border-box; transition: 0.3s; }
         .sticky-bottom-content { width: 100%; max-width: 700px; display: flex; gap: 10px; }
 
-        /* Modal Cài đặt */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: var(--modal-overlay); align-items: center; justify-content: center; backdrop-filter: blur(3px); }
         .modal-content { background-color: var(--card-bg); padding: 25px; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; cursor: pointer; color: var(--muted-text); }
+
+        /* Toast Notifications */
+        #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 400px; }
+        .toast { background: #333; color: white; padding: 14px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); animation: slideDown 0.3s ease-out forwards; font-weight: bold; text-align: center; opacity: 0; }
+        .toast.success { background: var(--secondary); }
+        .toast.error { background: var(--danger); }
+        .toast.info { background: var(--primary); }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
+
+<div id="toastContainer"></div>
 
 <div class="sticky-bottom">
     <div class="sticky-bottom-content">
@@ -100,10 +112,16 @@
 <div class="container" id="mainApp">
     <div class="header-buttons">
         <button class="icon-btn" onclick="openSettings()" title="Cài đặt">⚙️</button>
-        <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Chế độ tối/sáng">🌙</button>
+        <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Chế độ">🌙</button>
     </div>
     
-    <h1>💸 Share Bill Ultimate</h1>
+    <div class="trip-manager">
+        <input type="text" id="tripNameInput" class="trip-name-input" placeholder="Tên chuyến đi..." onchange="renameTrip()">
+        <div class="trip-controls">
+            <select id="tripSelect" onchange="switchTrip()"></select>
+            <button class="btn-green" style="width: auto; margin: 0; padding: 10px 15px;" onclick="createNewTrip()" title="Tạo chuyến mới">➕ Mới</button>
+        </div>
+    </div>
 
     <div class="section">
         <h2>👥 Thành viên</h2>
@@ -119,7 +137,7 @@
         </p>
         <div id="peopleList" class="list-box" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
         
-        <div id="trashZone" ondragover="dragOverTrash(event)" ondragleave="dragLeaveTrash(event)" ondrop="dropTrash(event)" style="display:none; border: 2px dashed var(--danger); padding: 15px; text-align: center; border-radius: 8px; margin-top: 10px; background: rgba(231, 76, 60, 0.1); color: var(--danger); font-weight: bold; transition: 0.2s;">
+        <div id="trashZone" ondragover="dragOverTrash(event)" ondragleave="dragLeaveTrash(event)" ondrop="dropTrash(event)" style="display:none; border: 2px dashed var(--danger); padding: 15px; text-align: center; border-radius: 8px; margin-top: 10px; background: rgba(231, 76, 60, 0.1); color: var(--danger); font-weight: bold;">
             🗑️ Thả vào đây để xóa
         </div>
     </div>
@@ -127,10 +145,16 @@
     <div class="section" id="expenseSection">
         <h2>🧾 Thêm khoản chi</h2>
         <input type="text" id="billDesc" placeholder="Tên khoản chi (VD: Ăn lẩu, Taxi...)">
+        
         <label><b>Ai đã trả tiền?</b></label>
-        <select id="payerSelect"></select>
+        <select id="payerSelect" onchange="handlePayerChange()"></select>
+        
+        <div id="multiPayerBox" style="display: none; background: var(--box-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 5px;">
+            <p style="font-size: 13px; margin: 0 0 10px 0; color: var(--primary); font-weight: bold;">Nhập số tiền mỗi người đã góp vào hóa đơn này:</p>
+            <div id="multiPayerList" style="display: flex; flex-direction: column; gap: 5px;"></div>
+        </div>
 
-        <label><b>Cách chia:</b></label>
+        <label style="display: block; margin-top: 10px;"><b>Cách chia:</b></label>
         <select id="splitMode" onchange="updateUI()">
             <option value="ratio">🔄 Chia đều / Theo suất</option>
             <option value="exact">🎯 Nhập tiền riêng (+ Tự động chia dư)</option>
@@ -143,7 +167,7 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; margin-top: 10px;">
             <label style="margin: 0;"><b>Chi tiết cho từng người:</b></label>
-            <span style="font-size: 13px; color: var(--primary); cursor: pointer; font-weight: bold; padding: 5px;" onclick="toggleSelectAll()">☑️ Chọn/Bỏ chọn tất cả</span>
+            <span style="font-size: 13px; color: var(--primary); cursor: pointer; font-weight: bold; padding: 5px;" onclick="toggleSelectAll()">☑️ Chọn tất cả</span>
         </div>
         <div id="involvedRows" class="involved-list"></div>
 
@@ -174,14 +198,15 @@
         
         <div style="background: var(--box-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
             <h4 style="margin: 0 0 10px 0; color: var(--primary);">🔄 Đồng bộ dữ liệu</h4>
-            <p style="font-size: 13px; color: var(--muted-text); margin-top: 0;">Chép dữ liệu giữa các máy với nhau</p>
+            <p style="font-size: 13px; color: var(--muted-text); margin-top: 0;">Chép tất cả chuyến đi sang máy khác</p>
             <button class="btn-purple" style="margin-top: 0; padding: 10px;" onclick="exportData()">📤 Lấy mã đồng bộ</button>
             <button class="btn-blue" style="padding: 10px;" onclick="importData()">📥 Nhập mã đồng bộ</button>
         </div>
 
         <div style="background: rgba(231, 76, 60, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(231, 76, 60, 0.3);">
             <h4 style="margin: 0 0 10px 0; color: var(--danger);">⚠️ Vùng nguy hiểm</h4>
-            <button class="btn-red" style="margin-top: 0; padding: 10px;" onclick="clearAllData()">🗑 Xóa sạch toàn bộ dữ liệu</button>
+            <button class="btn-outline" style="margin-top: 0; padding: 10px; border-color: var(--danger); color: var(--danger);" onclick="deleteCurrentTrip()">🗑 Xóa chuyến đi hiện tại</button>
+            <button class="btn-red" style="padding: 10px;" onclick="clearAllData()">🧨 Xóa sạch toàn bộ dữ liệu App</button>
         </div>
     </div>
 </div>
@@ -189,7 +214,7 @@
 <div id="receiptWrapper" class="receipt-wrapper">
     <div id="receiptCaptureArea" class="receipt-capture-area">
         <div class="receipt-header">
-            <h2 style="margin:0; font-family: 'Courier New', Courier, monospace; color: #000;">HÓA ĐƠN CHI TIÊU</h2>
+            <h2 id="receiptTripName" style="margin:0; font-family: 'Courier New', Courier, monospace; color: #000; text-transform: uppercase;"></h2>
             <p id="receiptDate" style="margin: 5px 0; font-size: 14px; color: #333;"></p>
         </div>
         <div id="receiptContent"></div>
@@ -207,6 +232,16 @@
 </div>
 
 <script>
+    // --- HỆ THỐNG TOAST NOTIFICATION ---
+    function showToast(msg, type = 'success') {
+        let box = document.getElementById('toastContainer');
+        let t = document.createElement('div');
+        t.className = `toast toast-${type}`;
+        t.innerText = msg;
+        box.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; t.style.transition = '0.3s'; setTimeout(()=>t.remove(), 300); }, 2500);
+    }
+
     // --- GIAO DIỆN SÁNG/TỐI & MODAL ---
     let savedTheme = localStorage.getItem('theme');
     let systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -226,32 +261,115 @@
 
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(err => console.log(err)); }
 
-    // --- BIẾN TOÀN CỤC ---
-    let people = []; let expenses = []; let editingIndex = -1; let isAllSelected = true;
+    // --- QUẢN LÝ DỮ LIỆU & CHUYẾN ĐI (TRIPS) ---
+    let appData = { trips: [], currentId: null };
+    let currentTrip = null; let people = []; let expenses = []; let editingIndex = -1; let isAllSelected = true;
     
-    try {
-        let savedPeople = localStorage.getItem('ultimate_people'); if (savedPeople) people = JSON.parse(savedPeople);
-        let savedExpenses = localStorage.getItem('ultimate_expenses'); if (savedExpenses) expenses = JSON.parse(savedExpenses);
-    } catch (e) { localStorage.clear(); }
+    function initData() {
+        let stored = localStorage.getItem('sharebill_app_data');
+        if (stored) {
+            appData = JSON.parse(stored);
+        } else {
+            // Chuyển đổi dữ liệu cũ nếu có
+            let oldP = localStorage.getItem('ultimate_people');
+            let oldE = localStorage.getItem('ultimate_expenses');
+            if (oldP || oldE) {
+                appData.trips.push({ id: 1, name: "Chuyến đi cũ", people: JSON.parse(oldP||'[]'), expenses: JSON.parse(oldE||'[]') });
+                appData.currentId = 1;
+                localStorage.removeItem('ultimate_people'); localStorage.removeItem('ultimate_expenses');
+            } else {
+                appData.trips.push({ id: Date.now(), name: "Chuyến đi 1", people: [], expenses: [] });
+                appData.currentId = appData.trips[0].id;
+            }
+        }
+        loadCurrentTrip();
+    }
 
-    window.onload = () => updateUI();
-    function saveData() { localStorage.setItem('ultimate_people', JSON.stringify(people)); localStorage.setItem('ultimate_expenses', JSON.stringify(expenses)); }
-    
+    function loadCurrentTrip() {
+        currentTrip = appData.trips.find(t => t.id === appData.currentId);
+        if (!currentTrip && appData.trips.length > 0) currentTrip = appData.trips[0];
+        if (!currentTrip) { // Nếu lỡ xóa hết
+            currentTrip = { id: Date.now(), name: "Chuyến đi mới", people: [], expenses: [] };
+            appData.trips.push(currentTrip);
+        }
+        appData.currentId = currentTrip.id;
+        people = currentTrip.people; expenses = currentTrip.expenses;
+        
+        document.getElementById('tripNameInput').value = currentTrip.name;
+        
+        // Cập nhật dropdown
+        let sel = document.getElementById('tripSelect');
+        sel.innerHTML = appData.trips.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        sel.value = currentTrip.id;
+        
+        updateUI();
+    }
+
+    function saveData() { 
+        currentTrip.name = document.getElementById('tripNameInput').value.trim() || "Chuyến đi";
+        currentTrip.people = people; currentTrip.expenses = expenses;
+        localStorage.setItem('sharebill_app_data', JSON.stringify(appData)); 
+    }
+
+    function renameTrip() { saveData(); loadCurrentTrip(); showToast("Đã đổi tên chuyến đi", "info"); }
+    function switchTrip() { appData.currentId = parseInt(document.getElementById('tripSelect').value); loadCurrentTrip(); showToast("Đã chuyển danh sách", "info"); }
+    function createNewTrip() {
+        let newTrip = { id: Date.now(), name: `Chuyến đi ${appData.trips.length + 1}`, people: [], expenses: [] };
+        appData.trips.push(newTrip); appData.currentId = newTrip.id;
+        saveData(); loadCurrentTrip(); showToast("Đã tạo chuyến đi mới!", "success");
+    }
+
+    function deleteCurrentTrip() {
+        if(appData.trips.length === 1) { showToast("Không thể xóa chuyến đi cuối cùng!", "error"); return; }
+        if(confirm(`Xóa toàn bộ dữ liệu của "${currentTrip.name}"?`)) {
+            appData.trips = appData.trips.filter(t => t.id !== appData.currentId);
+            appData.currentId = appData.trips[0].id;
+            saveData(); loadCurrentTrip(); closeSettings(); showToast("Đã xóa chuyến đi", "success");
+        }
+    }
+
     function clearAllData() { 
-        if(confirm("⚠️ Xóa toàn bộ dữ liệu (Người và Khoản chi)?\nHành động này không thể hoàn tác!")) { 
-            localStorage.clear(); people = []; expenses = []; updateUI(); 
-            document.getElementById('resultBox').innerHTML = ''; document.getElementById('exportButtons').style.display = 'none'; 
-            cancelEdit(); closeSettings();
+        if(confirm("⚠️ Xóa sạch mọi chuyến đi và khôi phục App về trạng thái ban đầu?")) { 
+            localStorage.clear(); appData = { trips: [], currentId: null };
+            initData(); document.getElementById('resultBox').innerHTML = ''; document.getElementById('exportButtons').style.display = 'none'; 
+            cancelEdit(); closeSettings(); showToast("Đã reset ứng dụng", "success");
         } 
     }
 
-    // --- CHỌN TẤT CẢ ---
-    function toggleSelectAll() {
-        isAllSelected = !isAllSelected;
-        document.querySelectorAll('.involve-cb').forEach(cb => { cb.checked = isAllSelected; });
+    // --- GIAO DIỆN ĐA NGƯỜI TRẢ (MULTI-PAYER) ---
+    function handlePayerChange() {
+        let val = document.getElementById('payerSelect').value;
+        let box = document.getElementById('multiPayerBox');
+        let list = document.getElementById('multiPayerList');
+        
+        if (val === 'MULTI') {
+            box.style.display = 'block';
+            document.getElementById('billTotal').placeholder = "Máy tự cộng từ tiền góp";
+            document.getElementById('billTotal').readOnly = true;
+            document.getElementById('billTotal').style.backgroundColor = 'var(--bg-color)';
+            
+            list.innerHTML = people.map(p => `
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding: 4px 0;">
+                    <span>👤 ${p.name}</span>
+                    <input type="text" class="multi-payer-input" data-name="${p.name}" placeholder="VD: 50k" style="width:100px; padding:6px; margin:0; text-align:right;" oninput="formatMathInput(this)" onblur="applyMathEval(this); updateMultiPayerTotal()">
+                </div>
+            `).join('');
+        } else {
+            box.style.display = 'none';
+            document.getElementById('billTotal').placeholder = "Tổng tiền Bill (VD: 500k)";
+            document.getElementById('billTotal').readOnly = false;
+            document.getElementById('billTotal').style.backgroundColor = 'var(--input-bg)';
+        }
+    }
+
+    function updateMultiPayerTotal() {
+        let total = 0;
+        document.querySelectorAll('.multi-payer-input').forEach(inp => { total += parseMath(inp.value); });
+        document.getElementById('billTotal').value = total > 0 ? total.toLocaleString('vi-VN') : '';
     }
 
     // --- KÉO THẢ & XÓA THÀNH VIÊN ---
+    function toggleSelectAll() { isAllSelected = !isAllSelected; document.querySelectorAll('.involve-cb').forEach(cb => { cb.checked = isAllSelected; }); }
     function dragStart(e, name) { e.dataTransfer.setData('text/plain', name); document.getElementById('trashZone').style.display = 'block'; }
     function dragEnd(e) { document.getElementById('trashZone').style.display = 'none'; document.getElementById('trashZone').style.background = 'rgba(231, 76, 60, 0.1)'; }
     function dragOverTrash(e) { e.preventDefault(); document.getElementById('trashZone').style.background = 'rgba(231, 76, 60, 0.3)'; }
@@ -263,25 +381,28 @@
     function touchEnd(e) { if(pressTimer) clearTimeout(pressTimer); }
 
     function deletePerson(name) {
-        let inExpense = expenses.some(e => e.payer === name || e.involved.some(i => i.name === name));
-        if (inExpense) { alert(`❌ Không thể xóa "${name}" vì người này đang có tên trong hóa đơn.\nVui lòng sửa/xóa khoản chi đó trước!`); return; }
-        if (confirm(`Xóa thành viên "${name}" khỏi danh sách?`)) { people = people.filter(p => p.name !== name); saveData(); updateUI(); }
+        let inExpense = expenses.some(e => (e.payers && e.payers.some(p=>p.name===name)) || (!e.payers && e.payer === name) || e.involved.some(i => i.name === name));
+        if (inExpense) { showToast(`Không thể xóa vì ${name} đang có tên trong hóa đơn!`, "error"); return; }
+        if (confirm(`Xóa thành viên "${name}" khỏi danh sách?`)) { people = people.filter(p => p.name !== name); saveData(); updateUI(); showToast(`Đã xóa ${name}`, "success"); }
     }
 
     // --- ĐỒNG BỘ DỮ LIỆU ---
     function exportData() {
-        let data = { p: people, e: expenses }; let code = "SHAREBILL_" + btoa(encodeURIComponent(JSON.stringify(data)));
-        navigator.clipboard.writeText(code).then(() => { alert("✅ Đã copy MÃ ĐỒNG BỘ!\nGửi mã này cho bạn bè nhập vào máy của họ.");
+        let code = "SHAREBILL_" + btoa(encodeURIComponent(JSON.stringify(appData)));
+        navigator.clipboard.writeText(code).then(() => { showToast("✅ Đã copy MÃ ĐỒNG BỘ!", "success"); closeSettings();
         }).catch(() => { prompt("Thiết bị chặn copy tự động. Hãy copy mã bên dưới:", code); });
     }
     function importData() {
-        let code = prompt("📥 Dán MÃ ĐỒNG BỘ vào ô bên dưới:\n(Lưu ý: Dữ liệu hiện tại sẽ bị xóa sạch)");
+        let code = prompt("📥 Dán MÃ ĐỒNG BỘ vào ô bên dưới:\n(Lưu ý: Toàn bộ dữ liệu các chuyến đi trên máy bạn sẽ bị ghi đè)");
         if (!code) return; if (code.startsWith("SHAREBILL_")) code = code.replace("SHAREBILL_", "");
         try {
             let data = JSON.parse(decodeURIComponent(atob(code)));
-            if (data.p && data.e) { people = data.p; expenses = data.e; saveData(); updateUI(); closeSettings(); alert("🎉 Đồng bộ thành công!");
-            } else { alert("❌ Mã đồng bộ không hợp lệ!"); }
-        } catch (err) { alert("❌ Mã đồng bộ bị lỗi!"); }
+            if (data.trips) { appData = data; saveData(); loadCurrentTrip(); closeSettings(); showToast("Đồng bộ thành công!", "success");
+            } else if (data.p && data.e) { // Hỗ trợ đọc mã bản cũ
+                appData.trips.push({ id: Date.now(), name: "Dữ liệu Import", people: data.p, expenses: data.e });
+                appData.currentId = appData.trips[appData.trips.length-1].id; saveData(); loadCurrentTrip(); closeSettings(); showToast("Đồng bộ bản cũ thành công!", "success");
+            } else { showToast("Mã không hợp lệ!", "error"); }
+        } catch (err) { showToast("Mã bị lỗi!", "error"); }
     }
 
     // --- TOÁN HỌC ---
@@ -295,17 +416,29 @@
 
     function addPerson() {
         let n = document.getElementById('personName').value.trim(); let b = document.getElementById('personBank').value.trim(); let a = document.getElementById('personAcc').value.trim();
-        if (n && !people.find(p => p.name === n)) { people.push({ name: n, bank: b, account: a }); document.getElementById('personName').value = ''; document.getElementById('personBank').value = ''; document.getElementById('personAcc').value = ''; saveData(); updateUI(); } else if (!n) { alert("Nhập tên!"); } else { alert("Tên đã tồn tại!");}
+        if (n && !people.find(p => p.name === n)) { people.push({ name: n, bank: b, account: a }); document.getElementById('personName').value = ''; document.getElementById('personBank').value = ''; document.getElementById('personAcc').value = ''; saveData(); updateUI(); showToast("Đã thêm thành viên", "success"); } 
+        else if (!n) { showToast("Vui lòng nhập tên!", "error"); } else { showToast("Tên đã tồn tại!", "error");}
     }
 
     function addExpense() {
-        let desc = document.getElementById('billDesc').value.trim() || "Khoản chi"; let payer = document.getElementById('payerSelect').value; let mode = document.getElementById('splitMode').value;
+        let desc = document.getElementById('billDesc').value.trim() || "Khoản chi"; let payerSel = document.getElementById('payerSelect').value; let mode = document.getElementById('splitMode').value;
         let totalBill = parseMath(document.getElementById('billTotal').value); let involved = [];
         
+        // Xử lý Người Trả
+        let finalPayers = [];
+        if (payerSel === 'MULTI') {
+            document.querySelectorAll('.multi-payer-input').forEach(inp => { let m = parseMath(inp.value); if(m > 0) finalPayers.push({name: inp.dataset.name, amount: m}); });
+            if (finalPayers.length === 0) { showToast("Vui lòng nhập số tiền người góp!", "error"); return; }
+            totalBill = finalPayers.reduce((sum, p) => sum + p.amount, 0); // Ép tổng bill bằng tổng góp
+        } else {
+            if (!payerSel) { showToast("Vui lòng chọn người trả tiền!", "error"); return; }
+            finalPayers = [{name: payerSel, amount: totalBill}];
+        }
+
         if (mode === 'exact') {
             let sumExact = 0; let checkedRows = [];
             document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) { let money = parseMath(row.querySelector('.exact-input').value); checkedRows.push({ name: cb.value, money: money }); sumExact += money; } });
-            if (checkedRows.length === 0) { alert("Chọn ít nhất 1 người tham gia!"); return; }
+            if (checkedRows.length === 0) { showToast("Chọn ít nhất 1 người tham gia!", "error"); return; }
             
             let isAutoSplit = document.getElementById('autoSplitRest').checked;
             if (totalBill > sumExact) {
@@ -330,26 +463,34 @@
                 checkedRows.forEach(r => { if (r.money > 0) involved.push({ name: r.name, owed: r.money, exactMoney: r.money, detail: `(Riêng ${r.money.toLocaleString()}đ)` }); });
             }
         } else {
-            if (totalBill <= 0) { alert("Nhập tổng tiền!"); return; }
+            if (totalBill <= 0) { showToast("Nhập tổng tiền!", "error"); return; }
             let tW = 0; document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) tW += parseFloat(row.querySelector('.weight-input').value); });
             document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) { let w = parseFloat(row.querySelector('.weight-input').value); involved.push({ name: cb.value, owed: (totalBill / tW) * w, weight: w, detail: `` }); } });
         }
         
-        if (!payer || involved.length === 0) { alert("Thiếu thông tin người trả/tham gia!"); return; }
+        if (involved.length === 0) { showToast("Chưa chọn người tham gia!", "error"); return; }
         let finalMode = (mode === 'exact' && totalBill > involved.reduce((s,i)=>s+(i.detail.includes('Riêng')?0:i.owed),0)) ? 'mixed' : mode;
-        let newExpenseObj = { desc, amount: totalBill, payer, involved, mode: finalMode };
+        let newExpenseObj = { desc, amount: totalBill, payer: finalPayers[0].name, payers: finalPayers, involved, mode: finalMode };
 
-        if (editingIndex > -1) { expenses[editingIndex] = newExpenseObj; alert("✅ Cập nhật thành công!"); cancelEdit(); } 
-        else { expenses.push(newExpenseObj); }
+        if (editingIndex > -1) { expenses[editingIndex] = newExpenseObj; showToast("✅ Cập nhật thành công!", "success"); cancelEdit(); } 
+        else { expenses.push(newExpenseObj); showToast("Đã thêm hóa đơn", "success"); }
         saveData(); updateUI(); document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = '';
     }
 
-    function deleteExpense(idx) { if(confirm(`Xóa khoản chi "${expenses[idx].desc}"?`)) { expenses.splice(idx, 1); saveData(); updateUI(); if(editingIndex === idx) cancelEdit(); } }
+    function deleteExpense(idx) { if(confirm(`Xóa khoản chi "${expenses[idx].desc}"?`)) { expenses.splice(idx, 1); saveData(); updateUI(); showToast("Đã xóa", "info"); if(editingIndex === idx) cancelEdit(); } }
     function editExpense(idx) {
         let e = expenses[idx]; editingIndex = idx;
         document.getElementById('btnAddExpense').innerText = "💾 LƯU THAY ĐỔI"; document.getElementById('btnAddExpense').className = "btn-purple"; document.getElementById('btnCancelEdit').style.display = "block"; document.getElementById('expenseSection').scrollIntoView({behavior: "smooth"});
         document.getElementById('billDesc').value = e.desc; document.getElementById('splitMode').value = (e.mode === 'mixed' || e.mode === 'exact') ? 'exact' : 'ratio';
-        updateUI(); document.getElementById('payerSelect').value = e.payer; document.getElementById('billTotal').value = e.amount;
+        
+        // Payer
+        let ps = document.getElementById('payerSelect');
+        if (e.payers && e.payers.length > 1) { ps.value = 'MULTI'; handlePayerChange(); e.payers.forEach(p => { let inp = document.querySelector(`.multi-payer-input[data-name="${p.name}"]`); if(inp) inp.value = p.amount; }); } 
+        else { ps.value = e.payer || (e.payers[0].name); handlePayerChange(); }
+        
+        document.getElementById('billTotal').value = e.amount;
+        updateUI(true); // pass true to not rebuild rows from scratch if editing
+        
         document.querySelectorAll('.involved-row').forEach(row => {
             let cb = row.querySelector('.involve-cb'); let personInExp = e.involved.find(i => i.name === cb.value);
             if (personInExp) {
@@ -359,57 +500,55 @@
             } else { cb.checked = false; }
         });
     }
-    function cancelEdit() { editingIndex = -1; document.getElementById('btnAddExpense').innerText = "+ Thêm Khoản Chi"; document.getElementById('btnAddExpense').className = "btn-green"; document.getElementById('btnCancelEdit').style.display = "none"; document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = ''; updateUI(); }
+    function cancelEdit() { editingIndex = -1; document.getElementById('btnAddExpense').innerText = "+ Thêm Khoản Chi"; document.getElementById('btnAddExpense').className = "btn-green"; document.getElementById('btnCancelEdit').style.display = "none"; document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = ''; document.getElementById('payerSelect').value = ''; handlePayerChange(); updateUI(); }
 
     function toggleDetails(index) {
         let d = document.getElementById(`detail-${index}`); let i = document.getElementById(`icon-${index}`);
         if (d.style.display === "block") { d.style.display = "none"; i.style.transform = "rotate(0deg)"; } else { d.style.display = "block"; i.style.transform = "rotate(180deg)"; }
     }
 
-    function updateUI() {
-        document.getElementById('peopleList').innerHTML = people.map(p => `
-            <span class="item-card draggable-member" draggable="true" ondragstart="dragStart(event, '${p.name}')" ondragend="dragEnd(event)" ontouchstart="touchStart(event, '${p.name}')" ontouchend="touchEnd(event)" ontouchmove="touchEnd(event)" style="margin:0; font-size:14px;">
-                👤 <b>${p.name}</b> ${p.account ? `<br><small style="color:var(--muted-text)">${p.bank}: ${p.account}</small>` : ''}
-            </span>
-        `).join('');
+    function updateUI(skipRows = false) {
+        document.getElementById('peopleList').innerHTML = people.map(p => `<span class="item-card draggable-member" draggable="true" ondragstart="dragStart(event, '${p.name}')" ondragend="dragEnd(event)" ontouchstart="touchStart(event, '${p.name}')" ontouchend="touchEnd(event)" ontouchmove="touchEnd(event)" style="margin:0; font-size:14px;">👤 <b>${p.name}</b> ${p.account ? `<br><small style="color:var(--muted-text)">${p.bank}: ${p.account}</small>` : ''}</span>`).join('');
         
         let ps = document.getElementById('payerSelect'); let cur = ps.value; 
-        ps.innerHTML = '<option value="">-- Người trả --</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join(''); 
-        if(people.find(p=>p.name===cur)) ps.value = cur;
+        ps.innerHTML = '<option value="">-- Người trả --</option><option value="MULTI">👥 Nhiều người cùng trả</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join(''); 
+        if(cur === 'MULTI' || people.find(p=>p.name===cur)) ps.value = cur;
         
         let mode = document.getElementById('splitMode').value;
         let sharedNote = document.getElementById('sharedNote');
         
-        if (mode === 'exact') {
-            sharedNote.style.display = 'block';
-            sharedNote.innerHTML = `<label style="display:flex; align-items:center; gap:8px; color:var(--text-color); cursor:pointer; font-weight:normal;"><input type="checkbox" id="autoSplitRest" checked style="width:18px; height:18px; margin:0;">Tự động chia tiền dư cho người để trống</label>`;
-            document.getElementById('involvedRows').innerHTML = people.map(p => `<div class="involved-row"><label><input type="checkbox" class="involve-cb" value="${p.name}" checked> <b>${p.name}</b></label><div class="flex-inputs">Tiền: <input type="text" class="exact-input" placeholder="VD: 30k" onblur="applyMathEval(this)"></div></div>`).join('');
-        } else {
-            sharedNote.style.display = 'none';
-            document.getElementById('involvedRows').innerHTML = people.map(p => `<div class="involved-row"><label><input type="checkbox" class="involve-cb" value="${p.name}" checked> <b>${p.name}</b></label><div class="flex-inputs">Suất: <input type="number" class="weight-input" value="1" step="0.1"></div></div>`).join('');
+        if(!skipRows) {
+            if (mode === 'exact') {
+                sharedNote.style.display = 'block';
+                sharedNote.innerHTML = `<label style="display:flex; align-items:center; gap:8px; color:var(--text-color); cursor:pointer; font-weight:normal;"><input type="checkbox" id="autoSplitRest" checked style="width:18px; height:18px; margin:0;">Tự động chia tiền dư cho người để trống</label>`;
+                document.getElementById('involvedRows').innerHTML = people.map(p => `<div class="involved-row"><label><input type="checkbox" class="involve-cb" value="${p.name}" checked> <b>${p.name}</b></label><div class="flex-inputs">Tiền: <input type="text" class="exact-input" placeholder="VD: 30k" onblur="applyMathEval(this)"></div></div>`).join('');
+            } else {
+                sharedNote.style.display = 'none';
+                document.getElementById('involvedRows').innerHTML = people.map(p => `<div class="involved-row"><label><input type="checkbox" class="involve-cb" value="${p.name}" checked> <b>${p.name}</b></label><div class="flex-inputs">Suất: <input type="number" class="weight-input" value="1" step="0.1"></div></div>`).join('');
+            }
         }
         
         document.getElementById('expensesList').innerHTML = expenses.map((e, idx) => {
             let badgeHtml = e.mode === 'mixed' ? '<div class="badge badge-mixed">Riêng+Dư</div>' : e.mode === 'exact' ? '<div class="badge badge-exact">Tính riêng</div>' : '<div class="badge badge-exact">Chia chung</div>';
-            let detailsHtml = e.involved.map(i => { 
-                let detailTag = i.detail ? `<span style="font-size:11px; color:var(--muted-text); margin-right:5px;">${i.detail}</span>` : '';
-                return `<div class="detail-row"><span>👤 ${i.name}</span><span style="text-align:right;">${detailTag}<b>${Math.round(i.owed).toLocaleString('vi-VN')}đ</b></span></div>`; 
-            }).join('');
+            let detailsHtml = e.involved.map(i => { let detailTag = i.detail ? `<span style="font-size:11px; color:var(--muted-text); margin-right:5px;">${i.detail}</span>` : ''; return `<div class="detail-row"><span>👤 ${i.name}</span><span style="text-align:right;">${detailTag}<b>${Math.round(i.owed).toLocaleString('vi-VN')}đ</b></span></div>`; }).join('');
             
+            let payerDisplay = "";
+            if (e.payers && e.payers.length > 1) { payerDisplay = `<span style="color:var(--primary);">Nhiều người (${e.payers.map(p=>p.name).join(', ')})</span>`; } 
+            else { payerDisplay = `<b>${e.payer || e.payers[0].name}</b>`; }
+
             return `
             <div class="item-card ${editingIndex === idx ? 'editing-card' : ''}" style="${editingIndex === idx ? 'border: 2px solid var(--purple);' : ''}">
                 <div class="expense-header" onclick="toggleDetails(${idx})">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div><b>${e.desc}</b>: <span style="color:var(--danger); font-weight:bold; font-size:16px;">${e.amount.toLocaleString('vi-VN')}đ</span></div>
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            ${badgeHtml}
-                            <span class="btn-action-icon" onclick="event.stopPropagation(); editExpense(${idx})" title="Sửa">✏️</span>
-                            <span class="btn-action-icon" onclick="event.stopPropagation(); deleteExpense(${idx})" title="Xóa">🗑️</span>
-                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">${badgeHtml}<span class="btn-action-icon" onclick="event.stopPropagation(); editExpense(${idx})" title="Sửa">✏️</span><span class="btn-action-icon" onclick="event.stopPropagation(); deleteExpense(${idx})" title="Xóa">🗑️</span></div>
                     </div>
-                    <div style="color:var(--muted-text); font-size: 0.9em; margin-top: 8px;">👉 <b>${e.payer}</b> trả cho <b>${e.involved.length} người</b> <span id="icon-${idx}" class="toggle-icon">▼</span></div>
+                    <div style="color:var(--muted-text); font-size: 0.9em; margin-top: 8px;">👉 ${payerDisplay} trả cho <b>${e.involved.length} người</b> <span id="icon-${idx}" class="toggle-icon">▼</span></div>
                 </div>
-                <div id="detail-${idx}" class="expense-details"><div style="margin-bottom: 8px; font-style: italic;">Bảng chia tiền:</div>${detailsHtml}</div>
+                <div id="detail-${idx}" class="expense-details">
+                    ${e.payers && e.payers.length > 1 ? `<div style="margin-bottom:8px; border-bottom:1px dotted var(--border-color); padding-bottom:5px;"><b>Người góp:</b> ${e.payers.map(p=>`${p.name}: ${p.amount.toLocaleString()}đ`).join(' | ')}</div>` : ''}
+                    <div style="margin-bottom: 8px; font-style: italic;">Bảng chia tiền:</div>${detailsHtml}
+                </div>
             </div>`;
         }).join('');
         if (document.getElementById('showStatsToggle').checked) toggleStats();
@@ -425,33 +564,23 @@
         box.innerHTML = html;
     }
 
-    function calculateDebtsAndScroll() {
-        calculateDebts();
-        document.getElementById('finalResultSection').scrollIntoView({ behavior: 'smooth' });
-    }
+    function calculateDebtsAndScroll() { calculateDebts(); document.getElementById('finalResultSection').scrollIntoView({ behavior: 'smooth' }); }
 
     let reportText = ""; let receiptTransferHtml = "";
     function calculateDebts() {
         if (!expenses.length) return; 
         
-        let stats = {};
-        people.forEach(p => stats[p.name] = { paid: 0, consumed: 0 });
-
+        let stats = {}; people.forEach(p => stats[p.name] = { paid: 0, consumed: 0 });
         expenses.forEach(e => { 
-            stats[e.payer].paid += e.amount; 
+            if (e.payers) { e.payers.forEach(p => stats[p.name].paid += p.amount); } else { stats[e.payer].paid += e.amount; }
             e.involved.forEach(i => { stats[i.name].consumed += i.owed; }); 
         });
 
-        // Bảng giải trình thu chi cá nhân
-        let summaryHtml = `<div id="summaryTableWrap" style="display:none; margin-top:15px;"><table class="summary-table">
-            <tr><th>Thành viên</th><th>Đã trả</th><th>Đã tiêu</th><th>Dư / Nợ</th></tr>`;
-        
+        let summaryHtml = `<div id="summaryTableWrap" style="display:none; margin-top:15px;"><table class="summary-table"><tr><th>Thành viên</th><th>Đã trả</th><th>Đã tiêu</th><th>Dư / Nợ</th></tr>`;
         let d = [], c = []; 
         for (let p in stats) { 
-            let bal = stats[p].paid - stats[p].consumed;
-            let v = Math.round(bal); 
+            let bal = stats[p].paid - stats[p].consumed; let v = Math.round(bal); 
             if (v < 0) d.push({ n: p, a: -v }); else if (v > 0) c.push({ n: p, a: v }); 
-
             let balText = v > 0 ? `<span style="color:var(--secondary);font-weight:bold;">+${v.toLocaleString()}</span>` : (v < 0 ? `<span style="color:var(--danger);font-weight:bold;">${v.toLocaleString()}</span>` : `0`);
             summaryHtml += `<tr><td><b>${p}</b></td><td>${Math.round(stats[p].paid).toLocaleString()}</td><td>${Math.round(stats[p].consumed).toLocaleString()}</td><td>${balText}</td></tr>`;
         }
@@ -459,14 +588,25 @@
         let toggleSummaryBtn = `<button class="btn-outline" style="margin-bottom: 15px;" onclick="let s=document.getElementById('summaryTableWrap'); s.style.display=s.style.display==='none'?'block':'none'">📊 Xem bảng giải trình thu chi</button>`;
 
         d.sort((a,b)=>b.a-a.a); c.sort((a,b)=>b.a-a.a);
-        
-        let res = [], i = 0, j = 0; reportText = "💸 TỔNG KẾT CHI PHÍ\n------------------\n"; receiptTransferHtml = "";
+        let res = [], i = 0, j = 0; reportText = `💸 TỔNG KẾT: ${currentTrip.name.toUpperCase()}\n------------------\n`; receiptTransferHtml = "";
         
         while (i < d.length && j < c.length) {
             let amount = Math.min(d[i].a, c[j].a); let creditor = people.find(p => p.name === c[j].n);
             let hasBank = creditor && creditor.bank && creditor.account; let qrUrl = hasBank ? `https://img.vietqr.io/image/${creditor.bank}-${creditor.account}-compact2.jpg?amount=${amount}&addInfo=Tra_tien_bill` : null;
             let lineText = `👉 ${d[i].n} chuyển cho ${c[j].n}: ${amount.toLocaleString('vi-VN')}đ${hasBank ? ` (NH: ${creditor.bank}, STK: ${creditor.account})` : ''}`; reportText += lineText + "\n";
-            res.push(`<div class="result-item" style="background:var(--box-bg); padding:15px; border-radius:8px; margin-bottom:10px; border-left: 5px solid var(--primary);"><b>${d[i].n}</b> chuyển cho <b>${c[j].n}</b>: <span style="color:var(--danger); font-weight:bold; font-size:16px;">${amount.toLocaleString('vi-VN')}đ</span>${hasBank ? `<br><small style="color:var(--muted-text);">🏦 ${creditor.bank} - STK: <b>${creditor.account}</b></small>` : ''}${qrUrl ? `<div class="qr-box" style="margin-top:10px;"><p style="margin:0 0 5px 0;"><small>Quét mã để trả nợ:</small></p><img src="${qrUrl}" class="qr-img" style="max-width:150px;"></div>` : ''}</div>`);
+            
+            res.push(`
+            <div class="result-item" style="background:var(--box-bg); padding:15px; border-radius:8px; margin-bottom:10px; border-left: 5px solid var(--primary); display:flex; justify-content:space-between; align-items:start;">
+                <div>
+                    <b>${d[i].n}</b> chuyển cho <b>${c[j].n}</b>: <span style="color:var(--danger); font-weight:bold; font-size:16px;">${amount.toLocaleString('vi-VN')}đ</span>
+                    ${hasBank ? `<br><small style="color:var(--muted-text);">🏦 ${creditor.bank} - STK: <b>${creditor.account}</b></small>` : ''}
+                    ${qrUrl ? `<div class="qr-box" style="margin-top:10px; text-align:left;"><img src="${qrUrl}" class="qr-img" style="max-width:120px;"></div>` : ''}
+                </div>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:5px; color:var(--secondary); font-weight:bold;">
+                    <input type="checkbox" style="width:20px; height:20px;" onchange="this.parentElement.parentElement.style.opacity = this.checked ? '0.4' : '1'"> Đã thu
+                </label>
+            </div>`);
+            
             receiptTransferHtml += `<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #ccc; text-align: center;"><div style="font-size: 16px; margin-bottom: 5px; color:#000;"><b>${d[i].n}</b> ➡️ <b>${c[j].n}</b></div><div style="font-size: 20px; font-weight: bold; color:#000;">${amount.toLocaleString('vi-VN')}đ</div>${hasBank ? `<div style="font-size: 14px; margin-top: 5px; color:#333;">NH: ${creditor.bank} - STK: ${creditor.account}</div>` : ''}${qrUrl ? `<img src="${qrUrl}" crossorigin="anonymous" style="max-width: 160px; margin-top: 15px; border-radius: 8px; border:1px solid #ccc;">` : ''}</div>`;
             d[i].a -= amount; c[j].a -= amount; if (d[i].a === 0) i++; if (c[j].a === 0) j++;
         }
@@ -476,17 +616,13 @@
         document.getElementById('exportButtons').style.display = 'flex';
     }
 
-    function copyResultText() { navigator.clipboard.writeText(reportText).then(() => alert("Đã copy văn bản!")); }
+    function copyResultText() { navigator.clipboard.writeText(reportText).then(() => showToast("Đã copy văn bản!", "success")); }
     
     function showReceipt() {
-        document.getElementById('mainApp').style.display = 'none'; 
-        document.getElementById('receiptWrapper').style.display = 'block';
-        document.getElementById('renderResult').style.display = 'none';
-        document.getElementById('receiptCaptureArea').style.display = 'block';
-        document.getElementById('btnDownload').style.display = 'block';
-        document.getElementById('btnDownload').innerText = "💾 Tải ảnh hóa đơn về máy";
-
-        let d = new Date(); document.getElementById('receiptDate').innerText = `Ngày: ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
+        document.getElementById('mainApp').style.display = 'none'; document.getElementById('receiptWrapper').style.display = 'block'; document.getElementById('renderResult').style.display = 'none'; document.getElementById('receiptCaptureArea').style.display = 'block'; document.getElementById('btnDownload').style.display = 'block'; document.getElementById('btnDownload').innerText = "💾 Tải ảnh hóa đơn về máy";
+        
+        document.getElementById('receiptTripName').innerText = currentTrip.name;
+        let d = new Date(); document.getElementById('receiptDate').innerText = `Ngày in: ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
         let totalAll = expenses.reduce((s, e) => s + e.amount, 0);
         document.getElementById('receiptContent').innerHTML = `<div style="margin-bottom: 30px; color:#000;"><h4 style="margin-bottom: 10px; text-decoration: underline;">1. CÁC KHOẢN CHI:</h4>${expenses.map(e => `<div style="display: flex; justify-content: space-between; padding: 5px 0;"><span>- ${e.desc}</span><b>${e.amount.toLocaleString('vi-VN')}đ</b></div>`).join('')}<div style="display: flex; justify-content: space-between; padding-top: 10px; margin-top: 10px; border-top: 2px solid #000; font-weight: bold; font-size: 18px;"><span>TỔNG CỘNG:</span><span>${totalAll.toLocaleString('vi-VN')}đ</span></div></div><div><h4 style="margin-bottom: 15px; text-decoration: underline; color:#000;">2. CHUYỂN KHOẢN:</h4>${receiptTransferHtml}</div>`;
         window.scrollTo(0, 0);
@@ -498,9 +634,12 @@
         let btn = document.getElementById('btnDownload'); btn.innerText = "⏳ Đang tạo ảnh..."; let captureArea = document.getElementById('receiptCaptureArea');
         html2canvas(captureArea, { useCORS: true, backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
             let imgData = canvas.toDataURL("image/png"); captureArea.style.display = 'none'; let renderBox = document.getElementById('renderResult'); renderBox.style.display = 'block'; document.getElementById('finalRenderedImage').src = imgData; btn.style.display = 'none';
-            let link = document.createElement('a'); link.download = 'HoaDon_ShareBill.png'; link.href = imgData; link.click();
-        }).catch(err => { alert("Đã xảy ra lỗi khi tạo ảnh. Vui lòng thử lại!"); btn.innerText = "💾 Tải ảnh hóa đơn về máy"; });
+            let link = document.createElement('a'); link.download = `HoaDon_${currentTrip.name.replace(/ /g,'_')}.png`; link.href = imgData; link.click();
+        }).catch(err => { showToast("Lỗi khi tạo ảnh!", "error"); btn.innerText = "💾 Tải ảnh hóa đơn về máy"; });
     }
+
+    // Khởi chạy dữ liệu
+    initData();
 </script>
 </body>
 </html>
