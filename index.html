@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2980b9">
-    <link rel="apple-touch-icon" href="https://www.flaticon.com/free-icon/poverty_4776026?term=poor&related_id=4776026.png?v=4">
+    <link rel="apple-touch-icon" href="https://www.flaticon.com/free-icon/poverty_4776026?term=poor&related_id=4776026.png?v=5">
     
     <title>Share Bill Ultimate</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -23,7 +23,7 @@
             --box-bg: #252525; --modal-overlay: rgba(0,0,0,0.7);
         }
 
-        /* HIỆU ỨNG NỀN TIỀN BAY */
+        /* --- NỀN ICON TIỀN ĐÃ ĐƯỢC CHỈNH LẠI ĐỀU & ĐẬM HƠN --- */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: var(--bg-color); 
@@ -31,23 +31,20 @@
             margin: 0; padding: 20px; padding-bottom: 90px; line-height: 1.5; 
             transition: background-color 0.3s, color 0.3s; 
             
-            /* Vẽ icon 💸 và 💰 lặp lại */
-            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' opacity='5'%3E%3Ctext x='20' y='50' font-size='30' transform='rotate(15 20 50)'%3E💸%3C/text%3E%3Ctext x='90' y='110' font-size='25' transform='rotate(-20 90 110)'%3E💰%3C/text%3E%3C/svg%3E");
+            /* Tăng kích thước lưới lên 160x160, xếp icon vào giữa 2 góc chéo để tạo pattern đều */
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' opacity='0.15'%3E%3Ctext x='20' y='60' font-size='40' transform='rotate(15 20 60)'%3E💸%3C/text%3E%3Ctext x='100' y='140' font-size='40' transform='rotate(-15 100 140)'%3E💰%3C/text%3E%3C/svg%3E");
             background-repeat: repeat;
-            /* Tạo hiệu ứng bay chéo liên tục */
-            animation: floatMoney 20s linear infinite;
+            animation: floatMoney 25s linear infinite;
         }
 
-        /* Ở chế độ Dark Mode, làm mờ đi một chút để không bị chói */
         body.dark-mode {
-            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' opacity='4'%3E%3Ctext x='20' y='50' font-size='30' transform='rotate(15 20 50)'%3E💸%3C/text%3E%3Ctext x='90' y='110' font-size='25' transform='rotate(-20 90 110)'%3E💰%3C/text%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' opacity='0.08'%3E%3Ctext x='20' y='60' font-size='40' transform='rotate(15 20 60)'%3E💸%3C/text%3E%3Ctext x='100' y='140' font-size='40' transform='rotate(-15 100 140)'%3E💰%3C/text%3E%3C/svg%3E");
         }
 
         @keyframes floatMoney {
             0% { background-position: 0 0; }
-            100% { background-position: 150px 150px; }
+            100% { background-position: 160px 160px; }
         }
-        /* KẾT THÚC HIỆU ỨNG NỀN */
 
         .container { max-width: 700px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s; position: relative; }
         
@@ -76,8 +73,8 @@
         .involved-row:last-child { border-bottom: none; }
         .flex-inputs { display: flex; gap: 10px; } .flex-inputs input { width: 100px; margin: 0; }
 
-        .qr-box { text-align: center; margin-top: 10px; padding: 15px; border: 1px dashed var(--border-color); border-radius: 8px; background: var(--box-bg); }
-        .qr-img { max-width: 180px; border-radius: 8px; margin-top: 5px; }
+        .qr-box { text-align: center; margin-top: 15px; padding: 15px; border: 1px dashed var(--border-color); border-radius: 8px; background: var(--box-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .qr-img { max-width: 150px; border-radius: 8px; margin-top: 5px; }
         
         .receipt-wrapper { display: none; max-width: 500px; margin: auto; }
         .receipt-capture-area { background: #ffffff; color: #000000; padding: 30px; font-family: 'Courier New', Courier, monospace; }
@@ -191,7 +188,7 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; margin-top: 10px;">
             <label style="margin: 0;"><b>Chi tiết cho từng người:</b></label>
-            <span style="font-size: 13px; color: var(--primary); cursor: pointer; font-weight: bold; padding: 5px;" onclick="toggleSelectAll()">☑️ Chọn tất cả</span>
+            <span style="font-size: 13px; color: var(--primary); cursor: pointer; font-weight: bold; padding: 5px;" onclick="toggleSelectAll()">☑️ Chọn/Bỏ chọn tất cả</span>
         </div>
         <div id="involvedRows" class="involved-list"></div>
 
@@ -568,15 +565,17 @@
             let lineText = `👉 ${d[i].n} chuyển cho ${c[j].n}: ${amount.toLocaleString('vi-VN')}đ${hasBank ? ` (NH: ${creditor.bank}, STK: ${creditor.account})` : ''}`; reportText += lineText + "\n";
             
             res.push(`
-            <div class="result-item" style="background:var(--box-bg); padding:15px; border-radius:8px; margin-bottom:10px; border-left: 5px solid var(--primary); display:flex; justify-content:space-between; align-items:start;">
-                <div>
-                    <b>${d[i].n}</b> chuyển cho <b>${c[j].n}</b>: <span style="color:var(--danger); font-weight:bold; font-size:16px;">${amount.toLocaleString('vi-VN')}đ</span>
-                    ${hasBank ? `<br><small style="color:var(--muted-text);">🏦 ${creditor.bank} - STK: <b>${creditor.account}</b></small>` : ''}
-                    ${qrUrl ? `<div class="qr-box" style="margin-top:10px; text-align:left;"><img src="${qrUrl}" class="qr-img" style="max-width:120px;"></div>` : ''}
+            <div class="result-item" style="background:var(--box-bg); padding:15px; border-radius:8px; margin-bottom:10px; border-left: 5px solid var(--primary);">
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div>
+                        <b>${d[i].n}</b> chuyển cho <b>${c[j].n}</b>: <span style="color:var(--danger); font-weight:bold; font-size:16px;">${amount.toLocaleString('vi-VN')}đ</span>
+                        ${hasBank ? `<br><small style="color:var(--muted-text);">🏦 ${creditor.bank} - STK: <b>${creditor.account}</b></small>` : ''}
+                    </div>
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:5px; color:var(--secondary); font-weight:bold; flex-shrink: 0;">
+                        <input type="checkbox" style="width:20px; height:20px;" onchange="this.parentElement.parentElement.parentElement.style.opacity = this.checked ? '0.4' : '1'"> Đã thu
+                    </label>
                 </div>
-                <label style="cursor:pointer; display:flex; align-items:center; gap:5px; color:var(--secondary); font-weight:bold;">
-                    <input type="checkbox" style="width:20px; height:20px;" onchange="this.parentElement.parentElement.style.opacity = this.checked ? '0.4' : '1'"> Đã thu
-                </label>
+                ${qrUrl ? `<div class="qr-box" style="margin-top:15px; display:flex; flex-direction:column; align-items:center; justify-content:center;"><p style="margin:0 0 5px 0;"><small>Quét mã để trả nợ:</small></p><img src="${qrUrl}" class="qr-img" style="max-width:160px; margin: 0 auto; display:block;"></div>` : ''}
             </div>`);
             
             receiptTransferHtml += `<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #ccc; text-align: center;"><div style="font-size: 16px; margin-bottom: 5px; color:#000;"><b>${d[i].n}</b> ➡️ <b>${c[j].n}</b></div><div style="font-size: 20px; font-weight: bold; color:#000;">${amount.toLocaleString('vi-VN')}đ</div>${hasBank ? `<div style="font-size: 14px; margin-top: 5px; color:#333;">NH: ${creditor.bank} - STK: ${creditor.account}</div>` : ''}${qrUrl ? `<img src="${qrUrl}" crossorigin="anonymous" style="max-width: 160px; margin-top: 15px; border-radius: 8px; border:1px solid #ccc;">` : ''}</div>`;
