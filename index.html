@@ -31,27 +31,27 @@
             transition: background-color 0.3s, color 0.3s; 
         }
 
-        /* --- NỀN ICON TIỀN: XỬ LÝ QUA GPU & MÃ HÓA BASE64 ĐỂ KHÔNG BAO GIỜ LỖI --- */
+       /* --- COPY ĐOẠN NÀY ĐỂ DÁN ĐÈ LÊN ĐOẠN CŨ --- */
         body::before {
             content: "";
             position: fixed;
             top: -160px; left: -160px; right: -160px; bottom: -160px;
-            background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiBvcGFjaXR5PSIwLjE1Ij48dGV4dCB4PSI0MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjUiIHRyYW5zZm9ybT0icm90YXRlKDE1IDQwIDQwKSI+8J+S4DwvdGV4dD48dGV4dCB4PSIxMjAiIHk9IjEzMCIgZm9udC1zaXplPSIyNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTE1IDEyMCAxMjApIj7wn5LwPC90ZXh0Pjwvc3ZnPg==");
-            background-repeat: repeat;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' opacity='0.15'%3E%3Ctext x='40' y='50' font-size='25' transform='rotate(15 40 40)'%3E%F0%9F%92%B8%3C/text%3E%3Ctext x='120' y='130' font-size='25' transform='rotate(-15 120 120)'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E");
             z-index: 0;
             pointer-events: none;
+            -webkit-animation: floatMoney 25s linear infinite;
             animation: floatMoney 25s linear infinite;
         }
 
         body.dark-mode::before {
-            background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiBvcGFjaXR5PSIwLjA4Ij48dGV4dCB4PSI0MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjUiIHRyYW5zZm9ybT0icm90YXRlKDE1IDQwIDQwKSI+8J+S4DwvdGV4dD48dGV4dCB4PSIxMjAiIHk9IjEzMCIgZm9udC1zaXplPSIyNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTE1IDEyMCAxMjApIj7wn5LwPC90ZXh0Pjwvc3ZnPg==");
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' opacity='0.08'%3E%3Ctext x='40' y='50' font-size='25' transform='rotate(15 40 40)'%3E%F0%9F%92%B8%3C/text%3E%3Ctext x='120' y='130' font-size='25' transform='rotate(-15 120 120)'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E");
         }
 
         @keyframes floatMoney {
             0% { transform: translate(0px, 0px); }
             100% { transform: translate(160px, 160px); }
         }
-        /* ------------------------------------------------------------------------ */
+        /* --- KẾT THÚC ĐOẠN COPY --- */
 
         .container { max-width: 700px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s; position: relative; z-index: 1; }
         
