@@ -275,7 +275,7 @@
             sharedNote.innerHTML = `
                 <label style="display:flex; align-items:center; gap:8px; color:var(--text-color); cursor:pointer; font-weight:normal;">
                     <input type="checkbox" id="autoSplitRest" checked style="width:18px; height:18px; margin:0;">
-                    Tự động chia tiền thừa cho người để trống
+                    Tự động chia tiền thừa cho người để trống (Nếu không sẽ tự động chia đều tiền thừa cho mọi người)
                 </label>
             `;
             document.getElementById('involvedRows').innerHTML = people.map(p => `<div class="involved-row"><label><input type="checkbox" class="involve-cb" value="${p.name}" checked> <b>${p.name}</b></label><div class="flex-inputs">Tiền: <input type="text" class="exact-input" placeholder="VD: 30k" onblur="applyMathEval(this)"></div></div>`).join('');
