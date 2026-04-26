@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2980b9">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135706.png">
+    <link rel="apple-touch-icon" href="https://www.flaticon.com/free-icon/poverty_4776026?term=poor&related_id=4776026.png?v=2">
     
     <title>Share Bill Ultimate</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -23,7 +23,7 @@
             --box-bg: #252525;
         }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; line-height: 1.5; transition: 0.3s; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; line-height: 1.5; transition: background-color 0.3s, color 0.3s; }
         .container { max-width: 700px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s; position: relative; }
         h1, h2 { text-align: center; color: var(--text-color); margin-bottom: 20px; }
         .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px dashed var(--border-color); }
@@ -45,7 +45,6 @@
         .qr-box { text-align: center; margin-top: 10px; padding: 15px; border: 1px dashed var(--border-color); border-radius: 8px; background: var(--box-bg); }
         .qr-img { max-width: 180px; border-radius: 8px; margin-top: 5px; }
         
-        /* Cấu trúc lại giao diện in bill */
         .receipt-wrapper { display: none; max-width: 500px; margin: auto; }
         .receipt-capture-area { background: #ffffff; color: #000000; padding: 30px; font-family: 'Courier New', Courier, monospace; }
         .receipt-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
@@ -100,6 +99,8 @@
 
         <div id="amountContainer">
             <input type="text" id="billTotal" placeholder="Tổng tiền Bill (VD: 500k)" oninput="formatMathInput(this)" onblur="applyMathEval(this)">
+            <div id="sharedNote" style="font-size: 13px; color: #d35400; display: none; margin-top: -5px; margin-bottom: 10px;">
+                </div>
         </div>
 
         <div id="involvedRows" class="involved-list"></div>
@@ -132,13 +133,11 @@
         <div id="receiptContent"></div>
         <p style="text-align: center; margin-top: 30px; font-weight: bold; color: #000;">--- CẢM ƠN BẠN ---</p>
     </div>
-    
     <div id="renderResult" style="display:none; text-align:center; margin-top:15px; border: 2px solid #27ae60; padding:10px; background: #e8f5e9;">
         <p style="color: #2e7d32; font-weight: bold; margin-top:0;">✅ Đã tạo ảnh thành công!</p>
-        <p style="font-size: 14px; color: #333;">(Nếu ảnh không tự tải xuống, hãy nhấn giữ vào bức ảnh bên dưới và chọn "Lưu hình ảnh")</p>
+        <p style="font-size: 14px; color: #333;">(Nhấn giữ vào bức ảnh bên dưới và chọn "Lưu hình ảnh")</p>
         <img id="finalRenderedImage" style="max-width: 100%; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
     </div>
-
     <div class="action-buttons">
         <button class="btn-blue" onclick="downloadImage()" id="btnDownload">💾 Tải ảnh hóa đơn về máy</button>
         <button class="btn-red" onclick="hideReceipt()">❌ Đóng Hóa đơn</button>
@@ -146,16 +145,40 @@
 </div>
 
 <script>
-    if(localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark-mode'); document.getElementById('themeBtn').innerText = '☀️';
+    // --- NÂNG CẤP TÍNH NĂNG TỰ ĐỘNG ĐỔI DARK MODE / LIGHT MODE ---
+    let savedTheme = localStorage.getItem('theme');
+    let systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Áp dụng theme lần đầu load web
+    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+        document.body.classList.add('dark-mode');
+        document.getElementById('themeBtn').innerText = '☀️';
+    } else {
+        document.getElementById('themeBtn').innerText = '🌙';
     }
+
+    // Nút tự gạt Theme bằng tay
     function toggleTheme() {
         document.body.classList.toggle('dark-mode');
         let isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light'); // Lưu lại lựa chọn thủ công
         document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
     }
 
+    // Tự động nhận diện khi người dùng đổi cài đặt trên điện thoại
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        if (!localStorage.getItem('theme')) { // Chỉ đổi nếu người dùng chưa tự bấm nút
+            if (event.matches) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeBtn').innerText = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('themeBtn').innerText = '🌙';
+            }
+        }
+    });
+
+    // --- CÁC TÍNH NĂNG KHÁC GIỮ NGUYÊN BẢN CHUẨN ---
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(err => console.log(err)); }
 
     let people = []; let expenses = [];
@@ -165,46 +188,74 @@
     } catch (e) { localStorage.clear(); }
 
     window.onload = () => updateUI();
-
     function saveData() { localStorage.setItem('ultimate_people', JSON.stringify(people)); localStorage.setItem('ultimate_expenses', JSON.stringify(expenses)); }
-
-    function clearAllData() {
-        if(confirm("Xóa toàn bộ dữ liệu?")) { localStorage.clear(); people = []; expenses = []; updateUI(); document.getElementById('resultBox').innerHTML = ''; document.getElementById('exportButtons').style.display = 'none'; }
-    }
+    function clearAllData() { if(confirm("Xóa toàn bộ dữ liệu?")) { localStorage.clear(); people = []; expenses = []; updateUI(); document.getElementById('resultBox').innerHTML = ''; document.getElementById('exportButtons').style.display = 'none'; } }
 
     function formatMathInput(i) { i.value = i.value.replace(/[^0-9.,+\- kK]/g, ''); }
     function parseMath(str) {
         if (!str) return 0; str = str.replace(/[.,]/g, '').replace(/[kK]/g, '000').replace(/[^0-9+\-]/g, '');
         let tokens = str.split(/([+\-])/), total = 0, op = '+';
-        for (let t of tokens) {
-            if (t === '+' || t === '-') op = t; else if (t !== '') { let n = parseFloat(t); if (!isNaN(n)) total = (op === '+') ? total + n : total - n; }
-        }
-        return total;
+        for (let t of tokens) { if (t === '+' || t === '-') op = t; else if (t !== '') { let n = parseFloat(t); if (!isNaN(n)) total = (op === '+') ? total + n : total - n; } } return total;
     }
     function applyMathEval(i) { let v = parseMath(i.value); i.value = v ? v.toLocaleString('vi-VN') : ''; }
 
     function addPerson() {
         let n = document.getElementById('personName').value.trim(); let b = document.getElementById('personBank').value.trim(); let a = document.getElementById('personAcc').value.trim();
-        if (n && !people.find(p => p.name === n)) { people.push({ name: n, bank: b, account: a }); document.getElementById('personName').value = ''; document.getElementById('personBank').value = ''; document.getElementById('personAcc').value = ''; saveData(); updateUI(); } 
-        else if (!n) { alert("Vui lòng nhập tên!"); }
+        if (n && !people.find(p => p.name === n)) { people.push({ name: n, bank: b, account: a }); document.getElementById('personName').value = ''; document.getElementById('personBank').value = ''; document.getElementById('personAcc').value = ''; saveData(); updateUI(); } else if (!n) { alert("Vui lòng nhập tên!"); }
     }
 
     function addExpense() {
         let desc = document.getElementById('billDesc').value.trim() || "Khoản chi"; let payer = document.getElementById('payerSelect').value; let mode = document.getElementById('splitMode').value;
         let totalBill = parseMath(document.getElementById('billTotal').value); let involved = [];
+        
         if (mode === 'exact') {
-            let sumExact = 0; let checkedCount = 0;
-            document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) { checkedCount++; sumExact += parseMath(row.querySelector('.exact-input').value); } });
-            let shared = (totalBill > sumExact) ? (totalBill - sumExact) / checkedCount : 0;
-            document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) { let own = parseMath(row.querySelector('.exact-input').value); involved.push({ name: cb.value, owed: own + shared }); } });
-            if (totalBill === 0) totalBill = sumExact;
+            let sumExact = 0; let checkedRows = [];
+            
+            document.querySelectorAll('.involved-row').forEach(row => {
+                let cb = row.querySelector('.involve-cb');
+                if (cb.checked) {
+                    let money = parseMath(row.querySelector('.exact-input').value);
+                    checkedRows.push({ name: cb.value, money: money });
+                    sumExact += money;
+                }
+            });
+
+            if (checkedRows.length === 0) { alert("Chọn ít nhất 1 người tham gia!"); return; }
+
+            let isAutoSplit = document.getElementById('autoSplitRest').checked;
+
+            if (totalBill > sumExact) {
+                if (isAutoSplit) {
+                    let emptyRows = checkedRows.filter(r => r.money === 0);
+                    if (emptyRows.length > 0) {
+                        let shared = (totalBill - sumExact) / emptyRows.length;
+                        checkedRows.forEach(r => {
+                            if (r.money === 0) { involved.push({ name: r.name, owed: shared, detail: `(Chia dư ${Math.round(shared).toLocaleString()}đ)` }); } 
+                            else { involved.push({ name: r.name, owed: r.money, detail: `(Riêng ${r.money.toLocaleString()}đ)` }); }
+                        });
+                        totalBill = totalBill;
+                    } else {
+                        let shared = (totalBill - sumExact) / checkedRows.length;
+                        checkedRows.forEach(r => { involved.push({ name: r.name, owed: r.money + shared, detail: `(Riêng ${r.money.toLocaleString()}đ + Chung ${Math.round(shared).toLocaleString()}đ)` }); });
+                    }
+                } else {
+                    let shared = (totalBill - sumExact) / checkedRows.length;
+                    checkedRows.forEach(r => { involved.push({ name: r.name, owed: r.money + shared, detail: `(Riêng ${r.money.toLocaleString()}đ + Chung ${Math.round(shared).toLocaleString()}đ)` }); });
+                }
+            } else {
+                totalBill = sumExact;
+                checkedRows.forEach(r => { if (r.money > 0) involved.push({ name: r.name, owed: r.money, detail: `(Riêng ${r.money.toLocaleString()}đ)` }); });
+            }
         } else {
             if (totalBill <= 0) { alert("Nhập tổng tiền!"); return; }
             let tW = 0; document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) tW += parseFloat(row.querySelector('.weight-input').value); });
-            document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) involved.push({ name: cb.value, owed: (totalBill / tW) * parseFloat(row.querySelector('.weight-input').value) }); });
+            document.querySelectorAll('.involved-row').forEach(row => { let cb = row.querySelector('.involve-cb'); if (cb.checked) involved.push({ name: cb.value, owed: (totalBill / tW) * parseFloat(row.querySelector('.weight-input').value), detail: `` }); });
         }
-        if (!payer || involved.length === 0) { alert("Thiếu thông tin!"); return; }
-        expenses.push({ desc, amount: totalBill, payer, involved, mode }); saveData(); updateUI(); document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = '';
+        
+        if (!payer || involved.length === 0) { alert("Thiếu thông tin người trả hoặc người tham gia!"); return; }
+        
+        let finalMode = (mode === 'exact' && totalBill > involved.reduce((s,i)=>s+(i.detail.includes('Riêng')?0:i.owed),0)) ? 'mixed' : mode;
+        expenses.push({ desc, amount: totalBill, payer, involved, mode: finalMode }); saveData(); updateUI(); document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = '';
     }
 
     function toggleDetails(index) {
@@ -215,12 +266,30 @@
     function updateUI() {
         document.getElementById('peopleList').innerHTML = people.map(p => `<span class="item-card" style="margin:0; font-size:14px;">👤 <b>${p.name}</b> ${p.account ? `<br><small style="color:var(--muted-text)">${p.bank}: ${p.account}</small>` : ''}</span>`).join('');
         let ps = document.getElementById('payerSelect'); let cur = ps.value; ps.innerHTML = '<option value="">-- Người trả --</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join(''); ps.value = cur;
+        
         let mode = document.getElementById('splitMode').value;
-        document.getElementById('involvedRows').innerHTML = people.map(p => `<div class="involved-row"><label><input type="checkbox" class="involve-cb" value="${p.name}" checked> <b>${p.name}</b></label><div class="flex-inputs">${mode === 'exact' ? `Tiền: <input type="text" class="exact-input" placeholder="VD: 30k" onblur="applyMathEval(this)">` : `Suất: <input type="number" class="weight-input" value="1" step="0.1">`}</div></div>`).join('');
+        let sharedNote = document.getElementById('sharedNote');
+        
+        if (mode === 'exact') {
+            sharedNote.style.display = 'block';
+            sharedNote.innerHTML = `
+                <label style="display:flex; align-items:center; gap:8px; color:var(--text-color); cursor:pointer; font-weight:normal;">
+                    <input type="checkbox" id="autoSplitRest" checked style="width:18px; height:18px; margin:0;">
+                    Tự động chia tiền thừa cho người để trống
+                </label>
+            `;
+            document.getElementById('involvedRows').innerHTML = people.map(p => `<div class="involved-row"><label><input type="checkbox" class="involve-cb" value="${p.name}" checked> <b>${p.name}</b></label><div class="flex-inputs">Tiền: <input type="text" class="exact-input" placeholder="VD: 30k" onblur="applyMathEval(this)"></div></div>`).join('');
+        } else {
+            sharedNote.style.display = 'none';
+            document.getElementById('involvedRows').innerHTML = people.map(p => `<div class="involved-row"><label><input type="checkbox" class="involve-cb" value="${p.name}" checked> <b>${p.name}</b></label><div class="flex-inputs">Suất: <input type="number" class="weight-input" value="1" step="0.1"></div></div>`).join('');
+        }
         
         document.getElementById('expensesList').innerHTML = expenses.map((e, idx) => {
             let badgeHtml = e.mode === 'mixed' ? '<div class="badge badge-mixed">Riêng+Dư</div>' : e.mode === 'exact' ? '<div class="badge badge-exact">Tính riêng</div>' : '<div class="badge badge-exact">Chia chung</div>';
-            let detailsHtml = e.involved.map(i => { let o = i.owed !== undefined ? i.owed : ((e.amount / e.involved.reduce((s, it) => s + (it.weight || 0), 0)) * (i.weight || 0)); return `<div class="detail-row"><span>👤 ${i.name}</span><b>${Math.round(o).toLocaleString('vi-VN')}đ</b></div>`; }).join('');
+            let detailsHtml = e.involved.map(i => { 
+                let detailTag = i.detail ? `<span style="font-size:11px; color:var(--muted-text); margin-right:5px;">${i.detail}</span>` : '';
+                return `<div class="detail-row"><span>👤 ${i.name}</span><span style="text-align:right;">${detailTag}<b>${Math.round(i.owed).toLocaleString('vi-VN')}đ</b></span></div>`; 
+            }).join('');
             return `<div class="item-card"><div class="expense-header" onclick="toggleDetails(${idx})"><div style="display: flex; justify-content: space-between; align-items: start;"><div><b>${e.desc}</b>: <span style="color:var(--danger); font-weight:bold; font-size:16px;">${e.amount.toLocaleString('vi-VN')}đ</span></div>${badgeHtml}</div><div style="color:var(--muted-text); font-size: 0.9em; margin-top: 8px;">👉 <b>${e.payer}</b> trả cho <b>${e.involved.length} người</b> <span id="icon-${idx}" class="toggle-icon">▼</span></div></div><div id="detail-${idx}" class="expense-details"><div style="margin-bottom: 8px; font-style: italic;">Bảng chia tiền:</div>${detailsHtml}</div></div>`;
         }).join('');
         if (document.getElementById('showStatsToggle').checked) toggleStats();
@@ -239,7 +308,7 @@
     let reportText = ""; let receiptTransferHtml = "";
     function calculateDebts() {
         if (!expenses.length) return; let bal = {}; people.forEach(p => bal[p.name] = 0);
-        expenses.forEach(e => { bal[e.payer] += e.amount; e.involved.forEach(i => { let o = i.owed !== undefined ? i.owed : ((e.amount / e.involved.reduce((s, it) => s + (it.weight || 0), 0)) * (i.weight || 0)); bal[i.name] -= o; }); });
+        expenses.forEach(e => { bal[e.payer] += e.amount; e.involved.forEach(i => { bal[i.name] -= i.owed; }); });
         let d = [], c = []; for (let p in bal) { let v = Math.round(bal[p]); if (v < 0) d.push({ n: p, a: -v }); else if (v > 0) c.push({ n: p, a: v }); }
         d.sort((a,b)=>b.a-a.a); c.sort((a,b)=>b.a-a.a);
         let res = [], i = 0, j = 0; reportText = "💸 TỔNG KẾT CHI PHÍ\n------------------\n"; receiptTransferHtml = "";
@@ -272,25 +341,17 @@
     
     function hideReceipt() { document.getElementById('mainApp').style.display = 'block'; document.getElementById('receiptWrapper').style.display = 'none'; }
 
-    // --- TÍNH NĂNG TẠO ẢNH XUẤT SẮC ---
     function downloadImage() {
         let btn = document.getElementById('btnDownload');
         btn.innerText = "⏳ Đang tạo ảnh...";
-        
         let captureArea = document.getElementById('receiptCaptureArea');
-        
-        // Gọi thư viện tạo ảnh, cho phép tải QR code từ link ngoài (useCORS)
         html2canvas(captureArea, { useCORS: true, backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
             let imgData = canvas.toDataURL("image/png");
-            
-            // Ẩn vùng mã HTML, hiển thị khung ảnh đã render để người dùng di động dễ nhấn giữ lưu
             captureArea.style.display = 'none';
             let renderBox = document.getElementById('renderResult');
             renderBox.style.display = 'block';
             document.getElementById('finalRenderedImage').src = imgData;
             btn.style.display = 'none';
-
-            // Tự động kích hoạt tải xuống cho máy tính hoặc các trình duyệt cho phép
             let link = document.createElement('a');
             link.download = 'HoaDon_ShareBill.png';
             link.href = imgData;
