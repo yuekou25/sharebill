@@ -26,9 +26,10 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; padding-bottom: 90px; line-height: 1.5; transition: 0.3s; }
         .container { max-width: 700px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s; position: relative; }
         
-        /* Trip Manager Header */
+        /* Quản lý Nhóm Header */
         .trip-manager { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--primary); }
-        .trip-name-input { font-size: 24px; font-weight: bold; text-align: center; border: none; background: transparent; color: var(--primary); width: 100%; outline: none; padding: 5px; margin-bottom: 10px; }
+        .trip-name-input { font-size: 24px; font-weight: bold; text-align: center; border: none; background: transparent; color: var(--primary); width: 100%; outline: none; padding: 5px; margin-bottom: 10px; transition: 0.2s; }
+        .trip-name-input:focus { background: var(--box-bg); border-radius: 8px; }
         .trip-controls { display: flex; gap: 10px; justify-content: center; align-items: center; }
         .trip-controls select { margin: 0; width: 60%; font-weight: bold; }
         
@@ -116,10 +117,10 @@
     </div>
     
     <div class="trip-manager">
-        <input type="text" id="tripNameInput" class="trip-name-input" placeholder="Tên chuyến đi..." onchange="renameTrip()">
+        <input type="text" id="tripNameInput" class="trip-name-input" placeholder="Tên nhóm..." onchange="renameTrip()" title="Bấm vào để đổi tên nhóm">
         <div class="trip-controls">
             <select id="tripSelect" onchange="switchTrip()"></select>
-            <button class="btn-green" style="width: auto; margin: 0; padding: 10px 15px;" onclick="createNewTrip()" title="Tạo chuyến mới">➕ Mới</button>
+            <button class="btn-green" style="width: auto; margin: 0; padding: 10px 15px;" onclick="createNewTrip()" title="Tạo nhóm mới">➕ Thêm Nhóm</button>
         </div>
     </div>
 
@@ -198,15 +199,15 @@
         
         <div style="background: var(--box-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
             <h4 style="margin: 0 0 10px 0; color: var(--primary);">🔄 Đồng bộ dữ liệu</h4>
-            <p style="font-size: 13px; color: var(--muted-text); margin-top: 0;">Chép tất cả chuyến đi sang máy khác</p>
+            <p style="font-size: 13px; color: var(--muted-text); margin-top: 0;">Chép tất cả các nhóm sang máy khác</p>
             <button class="btn-purple" style="margin-top: 0; padding: 10px;" onclick="exportData()">📤 Lấy mã đồng bộ</button>
             <button class="btn-blue" style="padding: 10px;" onclick="importData()">📥 Nhập mã đồng bộ</button>
         </div>
 
         <div style="background: rgba(231, 76, 60, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(231, 76, 60, 0.3);">
             <h4 style="margin: 0 0 10px 0; color: var(--danger);">⚠️ Vùng nguy hiểm</h4>
-            <button class="btn-outline" style="margin-top: 0; padding: 10px; border-color: var(--danger); color: var(--danger);" onclick="deleteCurrentTrip()">🗑 Xóa chuyến đi hiện tại</button>
-            <button class="btn-red" style="padding: 10px;" onclick="clearAllData()">🧨 Xóa sạch toàn bộ dữ liệu App</button>
+            <button class="btn-outline" style="margin-top: 0; padding: 10px; border-color: var(--danger); color: var(--danger);" onclick="deleteCurrentTrip()">🗑 Xóa nhóm hiện tại</button>
+            <button class="btn-red" style="padding: 10px;" onclick="clearAllData()">🧨 Xóa sạch mọi nhóm & dữ liệu App</button>
         </div>
     </div>
 </div>
@@ -261,7 +262,7 @@
 
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(err => console.log(err)); }
 
-    // --- QUẢN LÝ DỮ LIỆU & CHUYẾN ĐI (TRIPS) ---
+    // --- QUẢN LÝ DỮ LIỆU & NHÓM ---
     let appData = { trips: [], currentId: null };
     let currentTrip = null; let people = []; let expenses = []; let editingIndex = -1; let isAllSelected = true;
     
@@ -270,15 +271,14 @@
         if (stored) {
             appData = JSON.parse(stored);
         } else {
-            // Chuyển đổi dữ liệu cũ nếu có
             let oldP = localStorage.getItem('ultimate_people');
             let oldE = localStorage.getItem('ultimate_expenses');
             if (oldP || oldE) {
-                appData.trips.push({ id: 1, name: "Chuyến đi cũ", people: JSON.parse(oldP||'[]'), expenses: JSON.parse(oldE||'[]') });
+                appData.trips.push({ id: 1, name: "Nhóm cũ", people: JSON.parse(oldP||'[]'), expenses: JSON.parse(oldE||'[]') });
                 appData.currentId = 1;
                 localStorage.removeItem('ultimate_people'); localStorage.removeItem('ultimate_expenses');
             } else {
-                appData.trips.push({ id: Date.now(), name: "Chuyến đi 1", people: [], expenses: [] });
+                appData.trips.push({ id: Date.now(), name: "Nhóm 1", people: [], expenses: [] });
                 appData.currentId = appData.trips[0].id;
             }
         }
@@ -288,8 +288,8 @@
     function loadCurrentTrip() {
         currentTrip = appData.trips.find(t => t.id === appData.currentId);
         if (!currentTrip && appData.trips.length > 0) currentTrip = appData.trips[0];
-        if (!currentTrip) { // Nếu lỡ xóa hết
-            currentTrip = { id: Date.now(), name: "Chuyến đi mới", people: [], expenses: [] };
+        if (!currentTrip) { 
+            currentTrip = { id: Date.now(), name: "Nhóm mới", people: [], expenses: [] };
             appData.trips.push(currentTrip);
         }
         appData.currentId = currentTrip.id;
@@ -297,7 +297,6 @@
         
         document.getElementById('tripNameInput').value = currentTrip.name;
         
-        // Cập nhật dropdown
         let sel = document.getElementById('tripSelect');
         sel.innerHTML = appData.trips.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
         sel.value = currentTrip.id;
@@ -306,30 +305,30 @@
     }
 
     function saveData() { 
-        currentTrip.name = document.getElementById('tripNameInput').value.trim() || "Chuyến đi";
+        currentTrip.name = document.getElementById('tripNameInput').value.trim() || "Nhóm";
         currentTrip.people = people; currentTrip.expenses = expenses;
         localStorage.setItem('sharebill_app_data', JSON.stringify(appData)); 
     }
 
-    function renameTrip() { saveData(); loadCurrentTrip(); showToast("Đã đổi tên chuyến đi", "info"); }
-    function switchTrip() { appData.currentId = parseInt(document.getElementById('tripSelect').value); loadCurrentTrip(); showToast("Đã chuyển danh sách", "info"); }
+    function renameTrip() { saveData(); loadCurrentTrip(); showToast("Đã đổi tên nhóm", "info"); }
+    function switchTrip() { appData.currentId = parseInt(document.getElementById('tripSelect').value); loadCurrentTrip(); showToast("Đã chuyển nhóm", "info"); }
     function createNewTrip() {
-        let newTrip = { id: Date.now(), name: `Chuyến đi ${appData.trips.length + 1}`, people: [], expenses: [] };
+        let newTrip = { id: Date.now(), name: `Nhóm ${appData.trips.length + 1}`, people: [], expenses: [] };
         appData.trips.push(newTrip); appData.currentId = newTrip.id;
-        saveData(); loadCurrentTrip(); showToast("Đã tạo chuyến đi mới!", "success");
+        saveData(); loadCurrentTrip(); showToast("Đã tạo nhóm mới!", "success");
     }
 
     function deleteCurrentTrip() {
-        if(appData.trips.length === 1) { showToast("Không thể xóa chuyến đi cuối cùng!", "error"); return; }
-        if(confirm(`Xóa toàn bộ dữ liệu của "${currentTrip.name}"?`)) {
+        if(appData.trips.length === 1) { showToast("Không thể xóa nhóm cuối cùng!", "error"); return; }
+        if(confirm(`Xóa toàn bộ dữ liệu của nhóm "${currentTrip.name}"?`)) {
             appData.trips = appData.trips.filter(t => t.id !== appData.currentId);
             appData.currentId = appData.trips[0].id;
-            saveData(); loadCurrentTrip(); closeSettings(); showToast("Đã xóa chuyến đi", "success");
+            saveData(); loadCurrentTrip(); closeSettings(); showToast("Đã xóa nhóm", "success");
         }
     }
 
     function clearAllData() { 
-        if(confirm("⚠️ Xóa sạch mọi chuyến đi và khôi phục App về trạng thái ban đầu?")) { 
+        if(confirm("⚠️ Xóa sạch mọi nhóm và khôi phục App về trạng thái ban đầu?")) { 
             localStorage.clear(); appData = { trips: [], currentId: null };
             initData(); document.getElementById('resultBox').innerHTML = ''; document.getElementById('exportButtons').style.display = 'none'; 
             cancelEdit(); closeSettings(); showToast("Đã reset ứng dụng", "success");
@@ -383,7 +382,7 @@
     function deletePerson(name) {
         let inExpense = expenses.some(e => (e.payers && e.payers.some(p=>p.name===name)) || (!e.payers && e.payer === name) || e.involved.some(i => i.name === name));
         if (inExpense) { showToast(`Không thể xóa vì ${name} đang có tên trong hóa đơn!`, "error"); return; }
-        if (confirm(`Xóa thành viên "${name}" khỏi danh sách?`)) { people = people.filter(p => p.name !== name); saveData(); updateUI(); showToast(`Đã xóa ${name}`, "success"); }
+        if (confirm(`Xóa thành viên "${name}" khỏi nhóm?`)) { people = people.filter(p => p.name !== name); saveData(); updateUI(); showToast(`Đã xóa ${name}`, "success"); }
     }
 
     // --- ĐỒNG BỘ DỮ LIỆU ---
@@ -393,14 +392,14 @@
         }).catch(() => { prompt("Thiết bị chặn copy tự động. Hãy copy mã bên dưới:", code); });
     }
     function importData() {
-        let code = prompt("📥 Dán MÃ ĐỒNG BỘ vào ô bên dưới:\n(Lưu ý: Toàn bộ dữ liệu các chuyến đi trên máy bạn sẽ bị ghi đè)");
+        let code = prompt("📥 Dán MÃ ĐỒNG BỘ vào ô bên dưới:\n(Lưu ý: Toàn bộ dữ liệu các nhóm trên máy bạn sẽ bị ghi đè)");
         if (!code) return; if (code.startsWith("SHAREBILL_")) code = code.replace("SHAREBILL_", "");
         try {
             let data = JSON.parse(decodeURIComponent(atob(code)));
             if (data.trips) { appData = data; saveData(); loadCurrentTrip(); closeSettings(); showToast("Đồng bộ thành công!", "success");
-            } else if (data.p && data.e) { // Hỗ trợ đọc mã bản cũ
-                appData.trips.push({ id: Date.now(), name: "Dữ liệu Import", people: data.p, expenses: data.e });
-                appData.currentId = appData.trips[appData.trips.length-1].id; saveData(); loadCurrentTrip(); closeSettings(); showToast("Đồng bộ bản cũ thành công!", "success");
+            } else if (data.p && data.e) { 
+                appData.trips.push({ id: Date.now(), name: "Nhóm Import", people: data.p, expenses: data.e });
+                appData.currentId = appData.trips[appData.trips.length-1].id; saveData(); loadCurrentTrip(); closeSettings(); showToast("Đồng bộ thành công!", "success");
             } else { showToast("Mã không hợp lệ!", "error"); }
         } catch (err) { showToast("Mã bị lỗi!", "error"); }
     }
@@ -429,7 +428,7 @@
         if (payerSel === 'MULTI') {
             document.querySelectorAll('.multi-payer-input').forEach(inp => { let m = parseMath(inp.value); if(m > 0) finalPayers.push({name: inp.dataset.name, amount: m}); });
             if (finalPayers.length === 0) { showToast("Vui lòng nhập số tiền người góp!", "error"); return; }
-            totalBill = finalPayers.reduce((sum, p) => sum + p.amount, 0); // Ép tổng bill bằng tổng góp
+            totalBill = finalPayers.reduce((sum, p) => sum + p.amount, 0); 
         } else {
             if (!payerSel) { showToast("Vui lòng chọn người trả tiền!", "error"); return; }
             finalPayers = [{name: payerSel, amount: totalBill}];
@@ -473,7 +472,7 @@
         let newExpenseObj = { desc, amount: totalBill, payer: finalPayers[0].name, payers: finalPayers, involved, mode: finalMode };
 
         if (editingIndex > -1) { expenses[editingIndex] = newExpenseObj; showToast("✅ Cập nhật thành công!", "success"); cancelEdit(); } 
-        else { expenses.push(newExpenseObj); showToast("Đã thêm hóa đơn", "success"); }
+        else { expenses.push(newExpenseObj); showToast("Đã thêm khoản chi", "success"); }
         saveData(); updateUI(); document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = '';
     }
 
@@ -483,13 +482,12 @@
         document.getElementById('btnAddExpense').innerText = "💾 LƯU THAY ĐỔI"; document.getElementById('btnAddExpense').className = "btn-purple"; document.getElementById('btnCancelEdit').style.display = "block"; document.getElementById('expenseSection').scrollIntoView({behavior: "smooth"});
         document.getElementById('billDesc').value = e.desc; document.getElementById('splitMode').value = (e.mode === 'mixed' || e.mode === 'exact') ? 'exact' : 'ratio';
         
-        // Payer
         let ps = document.getElementById('payerSelect');
         if (e.payers && e.payers.length > 1) { ps.value = 'MULTI'; handlePayerChange(); e.payers.forEach(p => { let inp = document.querySelector(`.multi-payer-input[data-name="${p.name}"]`); if(inp) inp.value = p.amount; }); } 
         else { ps.value = e.payer || (e.payers[0].name); handlePayerChange(); }
         
         document.getElementById('billTotal').value = e.amount;
-        updateUI(true); // pass true to not rebuild rows from scratch if editing
+        updateUI(true);
         
         document.querySelectorAll('.involved-row').forEach(row => {
             let cb = row.querySelector('.involve-cb'); let personInExp = e.involved.find(i => i.name === cb.value);
