@@ -68,6 +68,9 @@
         
         .btn-action-icon { cursor: pointer; transition: 0.2s; padding: 4px; border-radius: 4px; }
         .btn-action-icon:hover { background: rgba(0,0,0,0.1); }
+        
+        .draggable-member { cursor: grab; user-select: none; transition: transform 0.2s, box-shadow 0.2s; touch-action: pan-y; }
+        .draggable-member:active { cursor: grabbing; transform: scale(1.05); }
     </style>
 </head>
 <body>
@@ -84,7 +87,15 @@
         </div>
         <input type="text" id="personAcc" placeholder="Số tài khoản / Nickname">
         <button class="btn-blue" onclick="addPerson()">+ Thêm Thành Viên</button>
+        
+        <p style="font-size: 13px; color: var(--muted-text); text-align: center; margin-bottom: 5px;">
+            💡 <b>Mẹo:</b> Ấn giữ 1 giây (trên điện thoại) hoặc kéo thả (trên máy tính) để xóa tên.
+        </p>
         <div id="peopleList" class="list-box" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        
+        <div id="trashZone" ondragover="dragOverTrash(event)" ondragleave="dragLeaveTrash(event)" ondrop="dropTrash(event)" style="display:none; border: 2px dashed var(--danger); padding: 15px; text-align: center; border-radius: 8px; margin-top: 10px; background: rgba(231, 76, 60, 0.1); color: var(--danger); font-weight: bold; transition: 0.2s;">
+            🗑️ Thả vào đây để xóa thành viên
+        </div>
     </div>
 
     <div class="section">
@@ -161,7 +172,6 @@
 </div>
 
 <script>
-    // --- GIAO DIỆN TỰ ĐỘNG SÁNG/TỐI ---
     let savedTheme = localStorage.getItem('theme');
     let systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) { document.body.classList.add('dark-mode'); document.getElementById('themeBtn').innerText = '☀️'; } 
@@ -194,13 +204,52 @@
         } 
     }
 
-    // --- TÍNH NĂNG ĐỒNG BỘ DỮ LIỆU ---
+    // --- TÍNH NĂNG KÉO THẢ & ẤN GIỮ XÓA THÀNH VIÊN ---
+    function dragStart(e, name) {
+        e.dataTransfer.setData('text/plain', name);
+        document.getElementById('trashZone').style.display = 'block';
+    }
+    function dragEnd(e) {
+        document.getElementById('trashZone').style.display = 'none';
+        document.getElementById('trashZone').style.background = 'rgba(231, 76, 60, 0.1)';
+    }
+    function dragOverTrash(e) {
+        e.preventDefault();
+        document.getElementById('trashZone').style.background = 'rgba(231, 76, 60, 0.3)';
+    }
+    function dragLeaveTrash(e) {
+        document.getElementById('trashZone').style.background = 'rgba(231, 76, 60, 0.1)';
+    }
+    function dropTrash(e) {
+        e.preventDefault();
+        let name = e.dataTransfer.getData('text/plain');
+        document.getElementById('trashZone').style.display = 'none';
+        deletePerson(name);
+    }
+
+    let pressTimer;
+    function touchStart(e, name) {
+        pressTimer = setTimeout(() => { deletePerson(name); }, 800); // Giữ 800ms sẽ hỏi xóa
+    }
+    function touchEnd(e) { if(pressTimer) clearTimeout(pressTimer); }
+
+    function deletePerson(name) {
+        let inExpense = expenses.some(e => e.payer === name || e.involved.some(i => i.name === name));
+        if (inExpense) {
+            alert(`❌ Không thể xóa "${name}" vì người này đang có tên trong các hóa đơn chi bên dưới.\nVui lòng xóa hoặc sửa các khoản chi đó trước!`);
+            return;
+        }
+        if (confirm(`Bạn có chắc muốn xóa thành viên "${name}" khỏi danh sách?`)) {
+            people = people.filter(p => p.name !== name);
+            saveData(); updateUI();
+        }
+    }
+
+    // --- ĐỒNG BỘ DỮ LIỆU ---
     function exportData() {
         let data = { p: people, e: expenses };
-        // Mã hóa JSON thành chuỗi Base64
         let code = "SHAREBILL_" + btoa(encodeURIComponent(JSON.stringify(data)));
-        navigator.clipboard.writeText(code).then(() => {
-            alert("✅ Đã copy MÃ ĐỒNG BỘ!\nHãy gửi mã này vào Zalo để bạn bè nhập vào máy của họ.");
+        navigator.clipboard.writeText(code).then(() => { alert("✅ Đã copy MÃ ĐỒNG BỘ!\nHãy gửi mã này vào Zalo để bạn bè nhập vào máy của họ.");
         }).catch(() => { prompt("Thiết bị không hỗ trợ copy tự động. Hãy bôi đen và copy mã bên dưới:", code); });
     }
 
@@ -208,18 +257,15 @@
         let code = prompt("📥 Dán MÃ ĐỒNG BỘ vào ô bên dưới:\n(Lưu ý: Dữ liệu cũ trên máy bạn sẽ bị xóa và ghi đè bằng dữ liệu mới)");
         if (!code) return;
         if (code.startsWith("SHAREBILL_")) code = code.replace("SHAREBILL_", "");
-        
         try {
             let data = JSON.parse(decodeURIComponent(atob(code)));
             if (data.p && data.e) {
                 people = data.p; expenses = data.e;
-                saveData(); updateUI();
-                alert("🎉 Đồng bộ dữ liệu thành công!");
+                saveData(); updateUI(); alert("🎉 Đồng bộ dữ liệu thành công!");
             } else { alert("❌ Mã đồng bộ không hợp lệ!"); }
         } catch (err) { alert("❌ Mã đồng bộ bị lỗi hoặc thiếu ký tự!"); }
     }
 
-    // --- LOGIC TÍNH TOÁN ---
     function formatMathInput(i) { i.value = i.value.replace(/[^0-9.,+\- kK]/g, ''); }
     function parseMath(str) {
         if (!str) return 0; str = str.replace(/[.,]/g, '').replace(/[kK]/g, '000').replace(/[^0-9+\-]/g, '');
@@ -275,89 +321,50 @@
         }
         
         if (!payer || involved.length === 0) { alert("Thiếu thông tin người trả hoặc người tham gia!"); return; }
-        
         let finalMode = (mode === 'exact' && totalBill > involved.reduce((s,i)=>s+(i.detail.includes('Riêng')?0:i.owed),0)) ? 'mixed' : mode;
-        
         let newExpenseObj = { desc, amount: totalBill, payer, involved, mode: finalMode };
 
-        // NẾU ĐANG Ở CHẾ ĐỘ SỬA -> Ghi đè. NẾU KHÔNG -> Thêm mới.
-        if (editingIndex > -1) {
-            expenses[editingIndex] = newExpenseObj;
-            alert("✅ Đã cập nhật thành công!");
-            cancelEdit();
-        } else {
-            expenses.push(newExpenseObj);
-        }
+        if (editingIndex > -1) { expenses[editingIndex] = newExpenseObj; alert("✅ Cập nhật khoản chi thành công!"); cancelEdit(); } 
+        else { expenses.push(newExpenseObj); }
         
         saveData(); updateUI(); document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = '';
     }
 
-    // --- TÍNH NĂNG XÓA / SỬA KHOẢN CHI TỪNG DÒNG ---
     function deleteExpense(idx) {
-        if(confirm(`Bạn có chắc muốn xóa khoản chi "${expenses[idx].desc}" không?`)) {
-            expenses.splice(idx, 1);
-            saveData(); updateUI();
-            if(editingIndex === idx) cancelEdit();
-        }
+        if(confirm(`Xóa khoản chi "${expenses[idx].desc}"?`)) { expenses.splice(idx, 1); saveData(); updateUI(); if(editingIndex === idx) cancelEdit(); }
     }
 
     function editExpense(idx) {
-        let e = expenses[idx];
-        editingIndex = idx;
-        
-        // Cập nhật giao diện nút
-        document.getElementById('btnAddExpense').innerText = "💾 LƯU THAY ĐỔI";
-        document.getElementById('btnAddExpense').className = "btn-purple";
-        document.getElementById('btnCancelEdit').style.display = "block";
-        document.getElementById('expenseSection').scrollIntoView({behavior: "smooth"});
-
-        // Điền lại thông tin vào Form
-        document.getElementById('billDesc').value = e.desc;
-        document.getElementById('splitMode').value = (e.mode === 'mixed' || e.mode === 'exact') ? 'exact' : 'ratio';
-        
-        updateUI(); // Bắt buộc gọi updateUI để nó tạo ra các ô nhập Tiền riêng / Suất
-
-        document.getElementById('payerSelect').value = e.payer;
-        document.getElementById('billTotal').value = e.amount;
-        
-        // Điền lại các dấu tick và số tiền chi tiết
+        let e = expenses[idx]; editingIndex = idx;
+        document.getElementById('btnAddExpense').innerText = "💾 LƯU THAY ĐỔI"; document.getElementById('btnAddExpense').className = "btn-purple"; document.getElementById('btnCancelEdit').style.display = "block"; document.getElementById('expenseSection').scrollIntoView({behavior: "smooth"});
+        document.getElementById('billDesc').value = e.desc; document.getElementById('splitMode').value = (e.mode === 'mixed' || e.mode === 'exact') ? 'exact' : 'ratio';
+        updateUI(); 
+        document.getElementById('payerSelect').value = e.payer; document.getElementById('billTotal').value = e.amount;
         document.querySelectorAll('.involved-row').forEach(row => {
-            let cb = row.querySelector('.involve-cb');
-            let personInExp = e.involved.find(i => i.name === cb.value);
-            
+            let cb = row.querySelector('.involve-cb'); let personInExp = e.involved.find(i => i.name === cb.value);
             if (personInExp) {
                 cb.checked = true;
-                if (e.mode === 'exact' || e.mode === 'mixed') {
-                    // Ưu tiên điền số tiền gốc nhập vào (exactMoney) nếu có, nếu bản cũ chưa lưu thì dùng owed
-                    let val = personInExp.exactMoney !== undefined ? personInExp.exactMoney : personInExp.owed;
-                    row.querySelector('.exact-input').value = val > 0 ? val : '';
-                } else {
-                    row.querySelector('.weight-input').value = personInExp.weight !== undefined ? personInExp.weight : 1;
-                }
-            } else {
-                cb.checked = false; // Bỏ tick những người không tham gia
-            }
+                if (e.mode === 'exact' || e.mode === 'mixed') { let val = personInExp.exactMoney !== undefined ? personInExp.exactMoney : personInExp.owed; row.querySelector('.exact-input').value = val > 0 ? val : ''; } 
+                else { row.querySelector('.weight-input').value = personInExp.weight !== undefined ? personInExp.weight : 1; }
+            } else { cb.checked = false; }
         });
     }
 
     function cancelEdit() {
-        editingIndex = -1;
-        document.getElementById('btnAddExpense').innerText = "+ Thêm Khoản Chi";
-        document.getElementById('btnAddExpense').className = "btn-green";
-        document.getElementById('btnCancelEdit').style.display = "none";
-        document.getElementById('billDesc').value = '';
-        document.getElementById('billTotal').value = '';
-        updateUI(); 
+        editingIndex = -1; document.getElementById('btnAddExpense').innerText = "+ Thêm Khoản Chi"; document.getElementById('btnAddExpense').className = "btn-green"; document.getElementById('btnCancelEdit').style.display = "none"; document.getElementById('billDesc').value = ''; document.getElementById('billTotal').value = ''; updateUI(); 
     }
 
-    // --- HIỂN THỊ GIAO DIỆN ---
     function toggleDetails(index) {
         let d = document.getElementById(`detail-${index}`); let i = document.getElementById(`icon-${index}`);
         if (d.style.display === "block") { d.style.display = "none"; i.style.transform = "rotate(0deg)"; } else { d.style.display = "block"; i.style.transform = "rotate(180deg)"; }
     }
 
     function updateUI() {
-        document.getElementById('peopleList').innerHTML = people.map(p => `<span class="item-card" style="margin:0; font-size:14px;">👤 <b>${p.name}</b> ${p.account ? `<br><small style="color:var(--muted-text)">${p.bank}: ${p.account}</small>` : ''}</span>`).join('');
+        document.getElementById('peopleList').innerHTML = people.map(p => `
+            <span class="item-card draggable-member" draggable="true" ondragstart="dragStart(event, '${p.name}')" ondragend="dragEnd(event)" ontouchstart="touchStart(event, '${p.name}')" ontouchend="touchEnd(event)" ontouchmove="touchEnd(event)" style="margin:0; font-size:14px;">
+                👤 <b>${p.name}</b> ${p.account ? `<br><small style="color:var(--muted-text)">${p.bank}: ${p.account}</small>` : ''}
+            </span>
+        `).join('');
         
         let ps = document.getElementById('payerSelect'); let cur = ps.value; 
         ps.innerHTML = '<option value="">-- Người trả --</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join(''); 
@@ -382,7 +389,6 @@
                 return `<div class="detail-row"><span>👤 ${i.name}</span><span style="text-align:right;">${detailTag}<b>${Math.round(i.owed).toLocaleString('vi-VN')}đ</b></span></div>`; 
             }).join('');
             
-            // Giao diện có thêm nút Sửa/Xóa
             return `
             <div class="item-card ${editingIndex === idx ? 'editing-card' : ''}" style="${editingIndex === idx ? 'border: 2px solid var(--purple);' : ''}">
                 <div class="expense-header" onclick="toggleDetails(${idx})">
@@ -390,15 +396,13 @@
                         <div><b>${e.desc}</b>: <span style="color:var(--danger); font-weight:bold; font-size:16px;">${e.amount.toLocaleString('vi-VN')}đ</span></div>
                         <div style="display: flex; align-items: center; gap: 5px;">
                             ${badgeHtml}
-                            <span class="btn-action-icon" onclick="event.stopPropagation(); editExpense(${idx})" title="Sửa khoản chi">✏️</span>
-                            <span class="btn-action-icon" onclick="event.stopPropagation(); deleteExpense(${idx})" title="Xóa khoản chi">🗑️</span>
+                            <span class="btn-action-icon" onclick="event.stopPropagation(); editExpense(${idx})" title="Sửa">✏️</span>
+                            <span class="btn-action-icon" onclick="event.stopPropagation(); deleteExpense(${idx})" title="Xóa">🗑️</span>
                         </div>
                     </div>
                     <div style="color:var(--muted-text); font-size: 0.9em; margin-top: 8px;">👉 <b>${e.payer}</b> trả cho <b>${e.involved.length} người</b> <span id="icon-${idx}" class="toggle-icon">▼</span></div>
                 </div>
-                <div id="detail-${idx}" class="expense-details">
-                    <div style="margin-bottom: 8px; font-style: italic;">Bảng chia tiền:</div>${detailsHtml}
-                </div>
+                <div id="detail-${idx}" class="expense-details"><div style="margin-bottom: 8px; font-style: italic;">Bảng chia tiền:</div>${detailsHtml}</div>
             </div>`;
         }).join('');
         if (document.getElementById('showStatsToggle').checked) toggleStats();
@@ -435,13 +439,7 @@
     function copyResultText() { navigator.clipboard.writeText(reportText).then(() => alert("Đã copy văn bản!")); }
     
     function showReceipt() {
-        document.getElementById('mainApp').style.display = 'none'; 
-        document.getElementById('receiptWrapper').style.display = 'block';
-        document.getElementById('renderResult').style.display = 'none';
-        document.getElementById('receiptCaptureArea').style.display = 'block';
-        document.getElementById('btnDownload').style.display = 'block';
-        document.getElementById('btnDownload').innerText = "💾 Tải ảnh hóa đơn về máy";
-
+        document.getElementById('mainApp').style.display = 'none'; document.getElementById('receiptWrapper').style.display = 'block'; document.getElementById('renderResult').style.display = 'none'; document.getElementById('receiptCaptureArea').style.display = 'block'; document.getElementById('btnDownload').style.display = 'block'; document.getElementById('btnDownload').innerText = "💾 Tải ảnh hóa đơn về máy";
         let d = new Date(); document.getElementById('receiptDate').innerText = `Ngày: ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
         let totalAll = expenses.reduce((s, e) => s + e.amount, 0);
         document.getElementById('receiptContent').innerHTML = `<div style="margin-bottom: 30px; color:#000;"><h4 style="margin-bottom: 10px; text-decoration: underline;">1. CÁC KHOẢN CHI:</h4>${expenses.map(e => `<div style="display: flex; justify-content: space-between; padding: 5px 0;"><span>- ${e.desc}</span><b>${e.amount.toLocaleString('vi-VN')}đ</b></div>`).join('')}<div style="display: flex; justify-content: space-between; padding-top: 10px; margin-top: 10px; border-top: 2px solid #000; font-weight: bold; font-size: 18px;"><span>TỔNG CỘNG:</span><span>${totalAll.toLocaleString('vi-VN')}đ</span></div></div><div><h4 style="margin-bottom: 15px; text-decoration: underline; color:#000;">2. CHUYỂN KHOẢN:</h4>${receiptTransferHtml}</div>`;
@@ -451,24 +449,11 @@
     function hideReceipt() { document.getElementById('mainApp').style.display = 'block'; document.getElementById('receiptWrapper').style.display = 'none'; }
 
     function downloadImage() {
-        let btn = document.getElementById('btnDownload');
-        btn.innerText = "⏳ Đang tạo ảnh...";
-        let captureArea = document.getElementById('receiptCaptureArea');
+        let btn = document.getElementById('btnDownload'); btn.innerText = "⏳ Đang tạo ảnh..."; let captureArea = document.getElementById('receiptCaptureArea');
         html2canvas(captureArea, { useCORS: true, backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
-            let imgData = canvas.toDataURL("image/png");
-            captureArea.style.display = 'none';
-            let renderBox = document.getElementById('renderResult');
-            renderBox.style.display = 'block';
-            document.getElementById('finalRenderedImage').src = imgData;
-            btn.style.display = 'none';
-            let link = document.createElement('a');
-            link.download = 'HoaDon_ShareBill.png';
-            link.href = imgData;
-            link.click();
-        }).catch(err => {
-            alert("Đã xảy ra lỗi khi tạo ảnh. Vui lòng thử lại!");
-            btn.innerText = "💾 Tải ảnh hóa đơn về máy";
-        });
+            let imgData = canvas.toDataURL("image/png"); captureArea.style.display = 'none'; let renderBox = document.getElementById('renderResult'); renderBox.style.display = 'block'; document.getElementById('finalRenderedImage').src = imgData; btn.style.display = 'none';
+            let link = document.createElement('a'); link.download = 'HoaDon_ShareBill.png'; link.href = imgData; link.click();
+        }).catch(err => { alert("Đã xảy ra lỗi khi tạo ảnh. Vui lòng thử lại!"); btn.innerText = "💾 Tải ảnh hóa đơn về máy"; });
     }
 </script>
 </body>
